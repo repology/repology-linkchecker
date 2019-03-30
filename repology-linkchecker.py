@@ -51,7 +51,11 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
                 ),
                 file=sys.stderr
             )
-        else:
+
+        if options.single_run:
+            return
+
+        if not worker_pool.stats.consumed:
             # sleep a bit if there were no urls to process
             await asyncio.sleep(10)
 
@@ -68,6 +72,8 @@ def parse_arguments() -> argparse.Namespace:
 
     parser.add_argument('--max-host-workers', type=int, default=100, help='maximum number of parallel host workers')
     parser.add_argument('--max-host-queue', type=int, default=100, help='maximum depth of per-host url queue')
+
+    parser.add_argument('--single-run', action='store_true', help='exit after single run')
 
     return parser.parse_args()
 
