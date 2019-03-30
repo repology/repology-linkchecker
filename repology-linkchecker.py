@@ -44,7 +44,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
 
         if worker_pool.stats.consumed:
             print(
-                'Run finished: {} urls total, {} processed, {} dropped'.format(
+                'Run finished: {} urls total, {} processed, {} postponed'.format(
                     worker_pool.stats.consumed,
                     worker_pool.stats.processed,
                     worker_pool.stats.dropped,
