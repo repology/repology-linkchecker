@@ -1,6 +1,7 @@
 # Repology link checker
 
 [![Build Status](https://travis-ci.org/repology/repology-linkchecker.svg?branch=master)](https://travis-ci.org/repology/repology-linkchecker)
+[![Coverage Status](https://coveralls.io/repos/github/repology/repology-linkchecker/badge.svg?branch=master)](https://coveralls.io/github/repology/repology-linkchecker?branch=master)
 
 This is a standalone link validity checker daemon for Repology project.
 
