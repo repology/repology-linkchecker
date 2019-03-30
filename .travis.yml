@@ -12,6 +12,7 @@ matrix:
     - python: nightly
   # because of psycopg2 build error:
   # psycopg/psycopgmodule.c:689:18: error: dereferencing pointer to incomplete type ‘PyInterpreterState {aka struct _is}’
+  # this should be fixed with psycopg2 2.8
   allow_failures:
     - python: 3.8-dev
     - python: nightly
