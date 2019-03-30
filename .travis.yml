@@ -31,7 +31,7 @@ before_install:
 script:
   - make flake8
   - make mypy
-  - coverage run repology-linkchecker.py --dsn "dbname=repology user=repology password=repology" --single-run
+  - coverage run --source=repology-linkchecker.py,linkchecker repology-linkchecker.py --dsn "dbname=repology user=repology password=repology" --single-run
   - psql -U repology -x -c 'SELECT * FROM links'
 after_success:
   - if [ -n "$COVERAGE" ]; then coveralls; fi
