@@ -50,14 +50,14 @@ async def update_url_status(pool: aiopg.Pool, url: str, time: datetime.datetime,
                 SET
                     last_checked = %(time)s,
 
-                    ipv4_last_success = CASE WHEN %(ipv4_success)s THEN %(time)s ELSE ipv4_last_success END,
-                    ipv4_last_failure = CASE WHEN %(ipv4_success)s THEN ipv4_last_failure ELSE %(time)s END,
+                    ipv4_last_success = CASE WHEN     %(ipv4_success)s THEN %(time)s ELSE ipv4_last_success END,
+                    ipv4_last_failure = CASE WHEN NOT %(ipv4_success)s THEN %(time)s ELSE ipv4_last_failure END,
                     ipv4_success = %(ipv4_success)s,
                     ipv4_status_code = %(ipv4_status_code)s,
                     ipv4_permanent_redirect_target = %(ipv4_permanent_redirect_target)s,
 
-                    ipv6_last_success = CASE WHEN %(ipv6_success)s THEN %(time)s ELSE ipv6_last_success END,
-                    ipv6_last_failure = CASE WHEN %(ipv6_success)s THEN ipv6_last_failure ELSE %(time)s END,
+                    ipv6_last_success = CASE WHEN     %(ipv6_success)s THEN %(time)s ELSE ipv6_last_success END,
+                    ipv6_last_failure = CASE WHEN NOT %(ipv6_success)s THEN %(time)s ELSE ipv6_last_failure END,
                     ipv6_success = %(ipv6_success)s,
                     ipv6_status_code = %(ipv6_status_code)s,
                     ipv6_permanent_redirect_target = %(ipv6_permanent_redirect_target)s
