@@ -1,0 +1,78 @@
+# Copyright (C) 2019 Dmitry Marakasov <amdmi3@amdmi3.ru>
+#
+# This file is part of repology
+#
+# repology is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# repology is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with repology.  If not, see <http://www.gnu.org/licenses/>.
+
+import datetime
+from typing import AsyncIterator, Optional
+
+import aiopg
+
+from linkchecker.status import UrlStatus
+
+
+async def iterate_urls_to_recheck(pool: aiopg.Pool, age: datetime.timedelta) -> AsyncIterator[str]:
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT url
+                FROM links
+                WHERE last_checked IS NULL OR last_checked < now() - %(age)s
+                """,
+                {
+                    'age': age
+                }
+            )
+
+            async for row in cur:
+                yield row[0]
+
+
+async def update_url_status(pool: aiopg.Pool, url: str, time: datetime.datetime, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus]) -> None:
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                UPDATE links
+                SET
+                    last_checked = %(time)s,
+
+                    ipv4_last_success = CASE WHEN %(ipv4_success)s THEN %(time)s ELSE ipv4_last_success END,
+                    ipv4_last_failure = CASE WHEN %(ipv4_success)s THEN ipv4_last_failure ELSE %(time)s END,
+                    ipv4_success = %(ipv4_success)s,
+                    ipv4_status_code = %(ipv4_status_code)s,
+                    ipv4_permanent_redirect_target = %(ipv4_redirect_target)s,
+
+                    ipv6_last_success = CASE WHEN %(ipv6_success)s THEN %(time)s ELSE ipv6_last_success END,
+                    ipv6_last_failure = CASE WHEN %(ipv6_success)s THEN ipv6_last_failure ELSE %(time)s END,
+                    ipv6_success = %(ipv6_success)s,
+                    ipv6_status_code = %(ipv6_status_code)s,
+                    ipv6_permanent_redirect_target = %(ipv6_redirect_target)s
+                WHERE url = %(url)s
+                """,
+                {
+                    'url': url,
+                    'time': time,
+
+                    'ipv4_success': ipv4_status.success if ipv4_status is not None else None,
+                    'ipv4_status_code': ipv4_status.status_code if ipv4_status is not None else None,
+                    'ipv4_permanent_redirect_target': ipv4_status.permanent_redirect_target if ipv4_status is not None else None,
+
+                    'ipv6_success': ipv6_status.success if ipv6_status is not None else None,
+                    'ipv6_status_code': ipv6_status.status_code if ipv6_status is not None else None,
+                    'ipv6_permanent_redirect_target': ipv6_status.permanent_redirect_target if ipv6_status is not None else None,
+                }
+            )
