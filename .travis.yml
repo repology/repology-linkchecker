@@ -12,6 +12,8 @@ matrix:
   allow_failures:
     - python: 3.8-dev
     - python: nightly
+before_script:
+  - sudo -u postgres psql < ci/create_database.sql
 before_install:
   # depends
   - pip install aiopg
