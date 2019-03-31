@@ -15,27 +15,35 @@
 # You should have received a copy of the GNU General Public License
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
+import errno
 from typing import ClassVar, Optional
 
 
 class ExtendedStatusCodes:
-    TIMEOUT: ClassVar[int] = -1
-    TOO_MANY_REDIRECTS: ClassVar[int] = -2
-    UNKNOWN_ERROR: ClassVar[int] = -3
-    INVALID_URL: ClassVar[int] = -5
-    DNS_ERROR: ClassVar[int] = -6
-    CONNECTION_REFUSED: ClassVar[int] = -7
+    UNKNOWN_ERROR: ClassVar[int] = -1
 
-    DNS_DOMAIN_NOT_FOUND: ClassVar[int] = -8
-    DNS_NO_ADDRESS_RECORD: ClassVar[int] = -9
+    # Generic errors
+    TIMEOUT: ClassVar[int] = -10
+    INVALID_URL: ClassVar[int] = -11
 
-    FTP_ERROR: ClassVar[int] = -10
-    FTP_CANNOT_CONNECT: ClassVar[int] = -11
+    # DNS
+    DNS_ERROR: ClassVar[int] = -20
+    DNS_DOMAIN_NOT_FOUND: ClassVar[int] = -21
+    DNS_NO_ADDRESS_RECORD: ClassVar[int] = -22
 
-    HOST_UNREACHABLE: ClassVar[int] = -12
+    # Connection errors
+    CONNECTION_REFUSED: ClassVar[int] = -1000 - errno.ECONNREFUSED
+    HOST_UNREACHABLE: ClassVar[int] = -1000 - errno.EHOSTUNREACH
+    CONNECTION_RESET_BY_PEER: ClassVar[int] = -1000 - errno.ECONNRESET
+    NETWORK_UNREACHABLE: ClassVar[int] = -1000 - errno.ENETUNREACH
+    SERVER_DISCONNECTED: ClassVar[int] = -30
+    NO_ROUTE_TO_HOST: ClassVar[int] = -31
+    CONNECTION_ABORTED: ClassVar[int] = -32
 
-    SSL_ERROR: ClassVar[int] = -13
-    SERVER_DISCONNECTED: ClassVar[int] = -14
+    # HTTP
+    TOO_MANY_REDIRECTS: ClassVar[int] = -40
+    SSL_ERROR: ClassVar[int] = -41
+    BAD_HTTP: ClassVar[int] = -42
 
 
 class UrlStatus:
