@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 
 class ExtendedStatusCodes:
@@ -41,10 +41,10 @@ class ExtendedStatusCodes:
 class UrlStatus:
     success: bool
     status_code: int
-    permanent_redirect_target: str
+    permanent_redirect_target: Optional[str]
     # TODO: add size, content-type and lastmod time
 
-    def __init__(self, success: bool, status_code: int, permanent_redirect_target: str) -> None:
+    def __init__(self, success: bool, status_code: int, permanent_redirect_target: Optional[str] = None) -> None:
         self.success = success
         self.status_code = status_code
         self.permanent_redirect_target = permanent_redirect_target
