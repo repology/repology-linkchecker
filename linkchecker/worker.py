@@ -62,15 +62,17 @@ class HostWorker:
         self.stats.dropped += 1
 
     async def run(self) -> None:
-        while self._queue:
-            queue_length = len(self._queue)
+        try:
+            while self._queue:
+                queue_length = len(self._queue)
 
-            await self._processor.process_urls(self._queue)
-            self._queue = []
+                await self._processor.process_urls(self._queue)
+                self._queue = []
 
-            self.stats.processed += queue_length
+                self.stats.processed += queue_length
 
-        self._on_finish()
+        finally:
+            self._on_finish()
 
     async def join(self) -> None:
         await self._task
