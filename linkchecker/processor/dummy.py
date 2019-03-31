@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
-
-import asyncio
 import datetime
-import random
 from typing import Iterable
 
 import aiopg
@@ -33,10 +30,6 @@ class DummyUrlProcessor(UrlProcessor):
     def __init__(self, pgpool: aiopg.Pool) -> None:
         self._pgpool = pgpool
 
-    async def _process_url(self, url: str) -> None:
-        await asyncio.sleep(random.random())
-        await update_url_status(self._pgpool, url, datetime.datetime.now(), None, None)
-
     async def process_urls(self, urls: Iterable[str]) -> None:
         for url in urls:
-            await self._process_url(url)
+            await update_url_status(self._pgpool, url, datetime.datetime.now(), None, None)
