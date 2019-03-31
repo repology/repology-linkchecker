@@ -20,20 +20,30 @@
 import argparse
 import asyncio
 import datetime
+import socket
 import sys
+
+import aiohttp
 
 import aiopg
 
+from linkchecker.processor.dispatching import DispatchingUrlProcessor
 from linkchecker.processor.dummy import DummyUrlProcessor
+from linkchecker.processor.http import HttpUrlProcessor
 from linkchecker.queries import iterate_urls_to_recheck
 from linkchecker.worker import HostWorkerPool
 
 
-async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
-    url_processor = DummyUrlProcessor(pgpool)
+USER_AGENT = 'repology-linkchecker/1 beta (+{}/bots)'.format('https://repology.org')
+
+
+async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool, ipv4_session: aiohttp.ClientSession, ipv6_session: aiohttp.ClientSession) -> None:
+    dummy_processor = DummyUrlProcessor(pgpool)
+    http_processor = HttpUrlProcessor(pgpool, ipv4_session, ipv6_session, options.delay)
+    dispatcher = DispatchingUrlProcessor(dummy_processor, http_processor)
 
     while True:
-        worker_pool = HostWorkerPool(url_processor)
+        worker_pool = HostWorkerPool(dispatcher)
 
         # process all urls which need processing
         async for url in iterate_urls_to_recheck(pgpool, datetime.timedelta(seconds=options.recheck_age)):
@@ -69,6 +79,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--dsn', default=config['DSN'], help='database connection params')
 
     parser.add_argument('--recheck-age', type=int, default=604800, help='min age for recheck in seconds')
+    parser.add_argument('--delay', type=float, default=3.0, help='delay between requests to the same host')
+    parser.add_argument('--timeout', type=int, default=60, help='timeout for each check')
 
     parser.add_argument('--max-host-workers', type=int, default=100, help='maximum number of parallel host workers')
     parser.add_argument('--max-host-queue', type=int, default=100, help='maximum depth of per-host url queue')
@@ -81,8 +93,17 @@ def parse_arguments() -> argparse.Namespace:
 async def main() -> None:
     options = parse_arguments()
 
+    ipv4_connector = aiohttp.TCPConnector(limit_per_host=1, family=socket.AF_INET)
+    ipv6_connector = aiohttp.TCPConnector(limit_per_host=1, family=socket.AF_INET6)
+
+    headers = {
+        'User-Agent': USER_AGENT,
+    }
+
     async with aiopg.create_pool(options.dsn) as pgpool:
-        await main_loop(options, pgpool)
+        async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=aiohttp.ClientTimeout(total=options.timeout), headers=headers, connector=ipv4_connector) as ipv4_session:
+            async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=aiohttp.ClientTimeout(total=options.timeout), headers=headers, connector=ipv6_connector) as ipv6_session:
+                await main_loop(options, pgpool, ipv4_session, ipv6_session)
 
 
 if __name__ == '__main__':
