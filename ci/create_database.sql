@@ -22,7 +22,10 @@ CREATE TABLE links (
 );
 
 INSERT INTO links(url) VALUES
+	('badschema://repology.org/'),
+	('ftp://nonexistent.repology.org/'),
+	('ftp://repology.org/nonexistent'),
 	('http://repology.org/'),
+	('https://nonexistent.repology.org/'),
 	('https://repology.org/'),
-	('https://repology.org/nonexistent'),
-	('https://nonexistent.repology.org/');
+	('https://repology.org/nonexistent');
