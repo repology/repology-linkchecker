@@ -36,7 +36,6 @@ class ExtendedStatusCodes:
     CONNECTION_RESET_BY_PEER: ClassVar[int] = -302
     NETWORK_UNREACHABLE: ClassVar[int] = -303
     SERVER_DISCONNECTED: ClassVar[int] = -304
-    NO_ROUTE_TO_HOST: ClassVar[int] = -305
     CONNECTION_ABORTED: ClassVar[int] = -306
     ADDRESS_NOT_AVAILABLE: ClassVar[int] = -307  # most likely host running checker dosn't support IPv6
 
