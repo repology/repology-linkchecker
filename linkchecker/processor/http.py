@@ -42,20 +42,30 @@ class HttpUrlProcessor(UrlProcessor):
         self._ipv4_session = ipv4_session
         self._ipv6_session = ipv6_session
 
+    async def _process_response(self, url: str, response: aiohttp.ClientResponse) -> UrlStatus:
+        redirect_target = None
+
+        for hist in response.history:
+            if hist.status == 301:
+                redirect_target = urljoin(url, hist.headers.get('Location'))
+            else:
+                break
+
+        return UrlStatus(response.status == 200, response.status, redirect_target)
+
     async def _check_url(self, url: str, session: aiohttp.ClientSession) -> UrlStatus:
         await asyncio.sleep(self._delay)
 
         try:
-            async with session.head(url, allow_redirects=True) as resp:
-                redirect_target = None
+            async with session.head(url, allow_redirects=True) as response:
+                if response.status == 200:
+                    return await self._process_response(url, response)
 
-                for hist in resp.history:
-                    if hist.status == 301:
-                        redirect_target = urljoin(url, hist.headers.get('Location'))
-                    else:
-                        break
+            # if status != 200, fallback to get
+            await asyncio.sleep(self._delay)
 
-                return UrlStatus(resp.status == 200, resp.status, redirect_target)
+            async with session.get(url, allow_redirects=True) as response:
+                return await self._process_response(url, response)
         except KeyboardInterrupt:
             raise
         except Exception as e:
