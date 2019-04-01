@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
-import errno
 from typing import ClassVar, Optional
 
 
@@ -23,27 +22,27 @@ class ExtendedStatusCodes:
     UNKNOWN_ERROR: ClassVar[int] = -1
 
     # Generic errors
-    TIMEOUT: ClassVar[int] = -10
-    INVALID_URL: ClassVar[int] = -11
+    TIMEOUT: ClassVar[int] = -100
+    INVALID_URL: ClassVar[int] = -101
 
     # DNS
-    DNS_ERROR: ClassVar[int] = -20
-    DNS_DOMAIN_NOT_FOUND: ClassVar[int] = -21
-    DNS_NO_ADDRESS_RECORD: ClassVar[int] = -22
+    DNS_ERROR: ClassVar[int] = -200
+    DNS_DOMAIN_NOT_FOUND: ClassVar[int] = -201
+    DNS_NO_ADDRESS_RECORD: ClassVar[int] = -202
 
     # Connection errors
-    CONNECTION_REFUSED: ClassVar[int] = -1000 - errno.ECONNREFUSED
-    HOST_UNREACHABLE: ClassVar[int] = -1000 - errno.EHOSTUNREACH
-    CONNECTION_RESET_BY_PEER: ClassVar[int] = -1000 - errno.ECONNRESET
-    NETWORK_UNREACHABLE: ClassVar[int] = -1000 - errno.ENETUNREACH
-    SERVER_DISCONNECTED: ClassVar[int] = -30
-    NO_ROUTE_TO_HOST: ClassVar[int] = -31
-    CONNECTION_ABORTED: ClassVar[int] = -32
+    CONNECTION_REFUSED: ClassVar[int] = -300
+    HOST_UNREACHABLE: ClassVar[int] = -301
+    CONNECTION_RESET_BY_PEER: ClassVar[int] = -302
+    NETWORK_UNREACHABLE: ClassVar[int] = -303
+    SERVER_DISCONNECTED: ClassVar[int] = -304
+    NO_ROUTE_TO_HOST: ClassVar[int] = -305
+    CONNECTION_ABORTED: ClassVar[int] = -306
 
     # HTTP
-    TOO_MANY_REDIRECTS: ClassVar[int] = -40
-    SSL_ERROR: ClassVar[int] = -41
-    BAD_HTTP: ClassVar[int] = -42
+    TOO_MANY_REDIRECTS: ClassVar[int] = -400
+    SSL_ERROR: ClassVar[int] = -401
+    BAD_HTTP: ClassVar[int] = -402
 
 
 class UrlStatus:
