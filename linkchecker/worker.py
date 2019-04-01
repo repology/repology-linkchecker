@@ -17,10 +17,9 @@
 
 import asyncio
 from typing import Callable, Dict, List
-from urllib.parse import urlparse
 
-from linkchecker.processor import UrlProcessor
 from linkchecker.hostname import get_hostname
+from linkchecker.processor import UrlProcessor
 
 
 class WorkerStatistics:

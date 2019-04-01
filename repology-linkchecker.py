@@ -27,6 +27,7 @@ import aiohttp
 
 import aiopg
 
+from linkchecker.delay import DelayManager
 from linkchecker.processor.dispatching import DispatchingUrlProcessor
 from linkchecker.processor.dummy import DummyUrlProcessor
 from linkchecker.processor.http import HttpUrlProcessor
@@ -38,8 +39,10 @@ USER_AGENT = 'repology-linkchecker/1 beta (+{}/bots)'.format('https://repology.o
 
 
 async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool, ipv4_session: aiohttp.ClientSession, ipv6_session: aiohttp.ClientSession) -> None:
+    delay_manager = DelayManager(options.delay)
+
     dummy_processor = DummyUrlProcessor(pgpool)
-    http_processor = HttpUrlProcessor(pgpool, ipv4_session, ipv6_session, options.delay)
+    http_processor = HttpUrlProcessor(pgpool, ipv4_session, ipv6_session, delay_manager)
     dispatcher = DispatchingUrlProcessor(dummy_processor, http_processor)
 
     while True:

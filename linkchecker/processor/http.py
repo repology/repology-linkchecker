@@ -24,6 +24,7 @@ import aiohttp
 
 import aiopg
 
+from linkchecker.delay import DelayManager
 from linkchecker.exceptions import classify_exception
 from linkchecker.processor import UrlProcessor
 from linkchecker.queries import update_url_status
@@ -32,15 +33,15 @@ from linkchecker.status import UrlStatus
 
 class HttpUrlProcessor(UrlProcessor):
     _pgpool: aiopg.Pool
-    _delay: int
     _ipv4_session: aiohttp.ClientSession
     _ipv6_session: aiohttp.ClientSession
+    _delay_manager: DelayManager
 
-    def __init__(self, pgpool: aiopg.Pool, ipv4_session: aiohttp.ClientSession, ipv6_session: aiohttp.ClientSession, delay: int) -> None:
+    def __init__(self, pgpool: aiopg.Pool, ipv4_session: aiohttp.ClientSession, ipv6_session: aiohttp.ClientSession, delay_manager: DelayManager) -> None:
         self._pgpool = pgpool
-        self._delay = delay
         self._ipv4_session = ipv4_session
         self._ipv6_session = ipv6_session
+        self._delay_manager = delay_manager
 
     async def _process_response(self, url: str, response: aiohttp.ClientResponse) -> UrlStatus:
         redirect_target = None
@@ -54,7 +55,9 @@ class HttpUrlProcessor(UrlProcessor):
         return UrlStatus(response.status == 200, response.status, redirect_target)
 
     async def _check_url(self, url: str, session: aiohttp.ClientSession) -> UrlStatus:
-        await asyncio.sleep(self._delay)
+        delay = self._delay_manager.get_delay(url)
+
+        await asyncio.sleep(delay)
 
         try:
             async with session.head(url, allow_redirects=True) as response:
@@ -62,7 +65,7 @@ class HttpUrlProcessor(UrlProcessor):
                     return await self._process_response(url, response)
 
             # if status != 200, fallback to get
-            await asyncio.sleep(self._delay)
+            await asyncio.sleep(delay)
 
             async with session.get(url, allow_redirects=True) as response:
                 return await self._process_response(url, response)
