@@ -20,6 +20,7 @@ from typing import Callable, Dict, List
 from urllib.parse import urlparse
 
 from linkchecker.processor import UrlProcessor
+from linkchecker.hostname import get_hostname
 
 
 class WorkerStatistics:
@@ -111,9 +112,7 @@ class HostWorkerPool:
         self._workers_finished = []
 
     async def add_url(self, url: str) -> None:
-        hostname = urlparse(url).hostname
-        if hostname.startswith('www.'):
-            hostname = hostname[4:]
+        hostname = get_hostname(url)
 
         if hostname not in self._workers:
             while len(self._workers) >= self._max_host_workers:
