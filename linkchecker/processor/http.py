@@ -73,9 +73,7 @@ class HttpUrlProcessor(UrlProcessor):
 
     async def process_urls(self, urls: Iterable[str]) -> None:
         for url in urls:
-            await asyncio.sleep(self._delay)
             ipv4_status = await self._check_url(url, self._ipv4_session)
-            await asyncio.sleep(self._delay)
             ipv6_status = await self._check_url(url, self._ipv6_session)
 
             await update_url_status(self._pgpool, url, datetime.datetime.now(), ipv4_status, ipv6_status)
