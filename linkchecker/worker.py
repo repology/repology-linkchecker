@@ -112,6 +112,8 @@ class HostWorkerPool:
 
     async def add_url(self, url: str) -> None:
         hostname = urlparse(url).hostname
+        if hostname.startswith('www.'):
+            hostname = hostname[4:]
 
         if hostname not in self._workers:
             while len(self._workers) >= self._max_host_workers:
