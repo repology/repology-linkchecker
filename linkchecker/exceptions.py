@@ -87,6 +87,9 @@ def classify_exception(e: Exception, url: str) -> UrlStatus:
         if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.EHOSTUNREACH:
             return UrlStatus(False, ExtendedStatusCodes.HOST_UNREACHABLE)
 
+        if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.EADDRNOTAVAIL:
+            return UrlStatus(False, ExtendedStatusCodes.HOST_UNREACHABLE)
+
         if e.__cause__ and isinstance(e.__cause__, ConnectionResetError):
             return UrlStatus(False, ExtendedStatusCodes.CONNECTION_RESET_BY_PEER)
 

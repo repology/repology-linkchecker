@@ -38,6 +38,7 @@ class ExtendedStatusCodes:
     SERVER_DISCONNECTED: ClassVar[int] = -304
     NO_ROUTE_TO_HOST: ClassVar[int] = -305
     CONNECTION_ABORTED: ClassVar[int] = -306
+    ADDRESS_NOT_AVAILABLE: ClassVar[int] = -307  # most likely host running checker dosn't support IPv6
 
     # HTTP
     TOO_MANY_REDIRECTS: ClassVar[int] = -400
