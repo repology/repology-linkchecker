@@ -79,7 +79,7 @@ def classify_exception(e: Exception, url: str) -> UrlStatus:
             return UrlStatus(False, ExtendedStatusCodes.NETWORK_UNREACHABLE)
 
         if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.ECONNRESET:
-            return UrlStatus(False, ExtendedStatusCodes.NO_ROUTE_TO_HOST)
+            return UrlStatus(False, ExtendedStatusCodes.CONNECTION_RESET_BY_PEER)
 
         if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.ECONNREFUSED:
             return UrlStatus(False, ExtendedStatusCodes.CONNECTION_REFUSED)
@@ -88,7 +88,7 @@ def classify_exception(e: Exception, url: str) -> UrlStatus:
             return UrlStatus(False, ExtendedStatusCodes.HOST_UNREACHABLE)
 
         if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.EADDRNOTAVAIL:
-            return UrlStatus(False, ExtendedStatusCodes.HOST_UNREACHABLE)
+            return UrlStatus(False, ExtendedStatusCodes.ADDRESS_NOT_AVAILABLE)
 
         if e.__cause__ and isinstance(e.__cause__, ConnectionResetError):
             return UrlStatus(False, ExtendedStatusCodes.CONNECTION_RESET_BY_PEER)
