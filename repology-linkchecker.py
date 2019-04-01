@@ -96,9 +96,7 @@ async def main() -> None:
     ipv4_connector = aiohttp.TCPConnector(limit_per_host=1, family=socket.AF_INET)
     ipv6_connector = aiohttp.TCPConnector(limit_per_host=1, family=socket.AF_INET6)
 
-    headers = {
-        'User-Agent': USER_AGENT,
-    }
+    headers = {'User-Agent': USER_AGENT}
 
     async with aiopg.create_pool(options.dsn) as pgpool:
         async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=aiohttp.ClientTimeout(total=options.timeout), headers=headers, connector=ipv4_connector) as ipv4_session:
