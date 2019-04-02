@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 
 
 def get_hostname(url: str) -> str:
-    hostname = urlparse(url).hostname
+    hostname = urlparse(url).hostname or ''
 
     if hostname.startswith('www.'):
         return hostname[4:]
