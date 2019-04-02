@@ -47,7 +47,7 @@ class HttpUrlProcessor(UrlProcessor):
         redirect_target = None
 
         for hist in response.history:
-            if hist.status == 301:
+            if hist.status in (301, 308):  # permanent redirects only
                 redirect_target = urljoin(url, hist.headers.get('Location'))
             else:
                 break
