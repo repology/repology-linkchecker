@@ -69,9 +69,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool, ipv4_sessio
             await worker_pool.join()
             return
 
-        if not worker_pool.stats.consumed:
-            # sleep a bit if there were no urls to process
-            await asyncio.sleep(60)
+        await asyncio.sleep(60)
 
         run_number += 1
 
