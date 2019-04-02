@@ -45,15 +45,12 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool, ipv4_sessio
     http_processor = HttpUrlProcessor(pgpool, ipv4_session, ipv6_session, delay_manager)
     dispatcher = DispatchingUrlProcessor(dummy_processor, http_processor)
 
-    while True:
-        worker_pool = HostWorkerPool(dispatcher)
+    worker_pool = HostWorkerPool(dispatcher)
 
+    while True:
         # process all urls which need processing
         async for url in iterate_urls_to_recheck(pgpool, datetime.timedelta(seconds=options.recheck_age)):
             await worker_pool.add_url(url)
-
-        # make sure all results land in the database before next iteration
-        await worker_pool.join()
 
         if worker_pool.stats.consumed:
             print(
@@ -66,11 +63,12 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool, ipv4_sessio
             )
 
         if options.single_run:
+            await worker_pool.join()
             return
 
         if not worker_pool.stats.consumed:
             # sleep a bit if there were no urls to process
-            await asyncio.sleep(10)
+            await asyncio.sleep(60)
 
 
 def parse_arguments() -> argparse.Namespace:

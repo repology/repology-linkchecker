@@ -16,7 +16,7 @@
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, MutableSet
 
 from linkchecker.hostname import get_hostname
 from linkchecker.processor import UrlProcessor
@@ -36,7 +36,8 @@ class WorkerStatistics:
 
 class HostWorker:
     # _processor: UrlsProcessor  # confuses mypy
-    _queue: List[str]
+    _queue: MutableSet[str]
+    _in_processing: MutableSet[str]
     _task: asyncio.Task  # type: ignore
     # _on_finish: Callable[[], None]  # confuses mypy
 
@@ -44,17 +45,21 @@ class HostWorker:
 
     def __init__(self, processor: UrlProcessor, on_finish: Callable[[], None]) -> None:
         self._processor = processor
-        self._queue = []
+        self._queue = set()
+        self._in_processing = set()
         self._task = asyncio.create_task(self.run())
         self._on_finish = on_finish
         self.stats = WorkerStatistics()
 
     def add_url(self, url: str) -> None:
+        if url in self._in_processing:
+            return
+
         self.stats.consumed += 1
 
         # just add the new url if the queue is not full
         if len(self._queue) < 100:
-            self._queue.append(url)
+            self._queue.add(url)
             return
 
         # drop if queue is full
@@ -64,12 +69,14 @@ class HostWorker:
     async def run(self) -> None:
         try:
             while self._queue:
-                queue_length = len(self._queue)
+                queue_to_process = self._queue
 
-                await self._processor.process_urls(self._queue)
-                self._queue = []
+                self._in_processing = queue_to_process
+                self._queue = set()
+                await self._processor.process_urls(queue_to_process)
+                self._in_processing = set()
 
-                self.stats.processed += queue_length
+                self.stats.processed += len(queue_to_process)
 
         finally:
             self._on_finish()
