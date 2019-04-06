@@ -23,8 +23,9 @@ from linkchecker.processor import UrlProcessor
 
 
 class WorkerPoolStatistics:
-    num_urls_scanned: int = 0
-    num_urls_processed: int = 0
+    scanned: int = 0
+    submitted: int = 0
+    processed: int = 0
 
 
 class _HostWorker:
@@ -59,10 +60,11 @@ class _HostWorker:
 
                 self._in_processing = queue_to_process
                 self._queue = set()
+                self._pool.update_statistics(submitted=len(queue_to_process))
                 await self._processor.process_urls(queue_to_process)
                 self._in_processing = set()
 
-                self._pool.update_statistics(len(queue_to_process))
+                self._pool.update_statistics(processed=len(queue_to_process))
 
         finally:
             self._pool.on_worker_finished(self._hostname)
@@ -107,7 +109,7 @@ class HostWorkerPool:
         self._worker_has_finished.set()
 
     async def add_url(self, url: str) -> None:
-        self._stats.num_urls_scanned += 1
+        self._stats.scanned += 1
 
         hostname = get_hostname(url)
 
@@ -123,8 +125,9 @@ class HostWorkerPool:
         while self._workers:
             await self._join_some_workers()
 
-    def update_statistics(self, num_urls_processed: int) -> None:
-        self._stats.num_urls_processed += num_urls_processed
+    def update_statistics(self, submitted: int = 0, processed: int = 0) -> None:
+        self._stats.submitted += submitted
+        self._stats.processed += processed
 
     def get_statistics(self) -> WorkerPoolStatistics:
         return self._stats

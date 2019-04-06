@@ -20,7 +20,9 @@
 import argparse
 import asyncio
 import datetime
+import signal
 import sys
+from typing import Any
 
 import aiopg
 
@@ -30,6 +32,13 @@ from linkchecker.processor.dummy import DummyUrlProcessor
 from linkchecker.processor.http import HttpUrlProcessor
 from linkchecker.queries import iterate_urls_to_recheck
 from linkchecker.worker import HostWorkerPool
+
+
+try:
+    from signal import SIGINFO
+    SIGINFO_SUPPORTED = True
+except ImportError:
+    SIGINFO_SUPPORTED = False
 
 
 async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
@@ -43,6 +52,22 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
 
     run_number = 0
 
+    def print_statistics(*args: Any) -> None:
+        stats = worker_pool.get_statistics()
+
+        print(
+            'Run #{} finished: {} urls scanned, {} submitted for processing, {} processed'.format(
+                run_number,
+                stats.scanned,
+                stats.submitted,
+                stats.processed
+            ),
+            file=sys.stderr
+        )
+
+    if SIGINFO_SUPPORTED:
+        signal.signal(SIGINFO, print_statistics)
+
     while True:
         run_number += 1
         worker_pool.reset_statistics()
@@ -51,16 +76,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
         async for url in iterate_urls_to_recheck(pgpool, datetime.timedelta(seconds=options.recheck_age)):
             await worker_pool.add_url(url)
 
-        stats = worker_pool.get_statistics()
-
-        print(
-            'Run #{} finished: {} urls scanned, {} processed'.format(
-                run_number,
-                stats.num_urls_scanned,
-                stats.num_urls_processed
-            ),
-            file=sys.stderr
-        )
+        print_statistics()
 
         if options.single_run:
             await worker_pool.join()
