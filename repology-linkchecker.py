@@ -41,31 +41,32 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
 
     worker_pool = HostWorkerPool(dispatcher)
 
-    run_number = 1
+    run_number = 0
 
     while True:
+        run_number += 1
+        worker_pool.reset_statistics()
+
         # process all urls which need processing
         async for url in iterate_urls_to_recheck(pgpool, datetime.timedelta(seconds=options.recheck_age)):
             await worker_pool.add_url(url)
 
-        if worker_pool.stats.consumed:
-            print(
-                'Run #{} finished: {} urls total, {} processed, {} postponed'.format(
-                    run_number,
-                    worker_pool.stats.consumed,
-                    worker_pool.stats.processed,
-                    worker_pool.stats.dropped,
-                ),
-                file=sys.stderr
-            )
+        stats = worker_pool.get_statistics()
+
+        print(
+            'Run #{} finished: {} urls scanned, {} processed'.format(
+                run_number,
+                stats.num_urls_scanned,
+                stats.num_urls_processed
+            ),
+            file=sys.stderr
+        )
 
         if options.single_run:
             await worker_pool.join()
             return
 
         await asyncio.sleep(60)
-
-        run_number += 1
 
 
 def parse_arguments() -> argparse.Namespace:
