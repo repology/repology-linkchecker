@@ -20,10 +20,7 @@
 import argparse
 import asyncio
 import datetime
-import socket
 import sys
-
-import aiohttp
 
 import aiopg
 
@@ -35,14 +32,11 @@ from linkchecker.queries import iterate_urls_to_recheck
 from linkchecker.worker import HostWorkerPool
 
 
-USER_AGENT = 'repology-linkchecker/1 beta (+{}/bots)'.format('https://repology.org')
-
-
-async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool, ipv4_session: aiohttp.ClientSession, ipv6_session: aiohttp.ClientSession) -> None:
+async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     delay_manager = DelayManager(options.delay)
 
     dummy_processor = DummyUrlProcessor(pgpool)
-    http_processor = HttpUrlProcessor(pgpool, ipv4_session, ipv6_session, delay_manager)
+    http_processor = HttpUrlProcessor(pgpool, delay_manager, options.timeout)
     dispatcher = DispatchingUrlProcessor(dummy_processor, http_processor)
 
     worker_pool = HostWorkerPool(dispatcher)
@@ -97,15 +91,8 @@ def parse_arguments() -> argparse.Namespace:
 async def main() -> None:
     options = parse_arguments()
 
-    ipv4_connector = aiohttp.TCPConnector(limit_per_host=1, family=socket.AF_INET)
-    ipv6_connector = aiohttp.TCPConnector(limit_per_host=1, family=socket.AF_INET6)
-
-    headers = {'User-Agent': USER_AGENT}
-
     async with aiopg.create_pool(options.dsn) as pgpool:
-        async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=aiohttp.ClientTimeout(total=options.timeout), headers=headers, connector=ipv4_connector) as ipv4_session:
-            async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=aiohttp.ClientTimeout(total=options.timeout), headers=headers, connector=ipv6_connector) as ipv6_session:
-                await main_loop(options, pgpool, ipv4_session, ipv6_session)
+        await main_loop(options, pgpool)
 
 
 if __name__ == '__main__':

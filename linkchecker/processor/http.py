@@ -17,6 +17,8 @@
 
 import asyncio
 import datetime
+import socket
+from concurrent.futures import CancelledError
 from typing import Iterable
 from urllib.parse import urljoin
 
@@ -28,20 +30,24 @@ from linkchecker.delay import DelayManager
 from linkchecker.exceptions import classify_exception
 from linkchecker.processor import UrlProcessor
 from linkchecker.queries import update_url_status
-from linkchecker.status import UrlStatus
+from linkchecker.resolver import PrecachedAsyncResolver
+from linkchecker.status import ExtendedStatusCodes, UrlStatus
+
+import yarl
+
+
+USER_AGENT = 'repology-linkchecker/1 beta (+{}/bots)'.format('https://repology.org')
 
 
 class HttpUrlProcessor(UrlProcessor):
     _pgpool: aiopg.Pool
-    _ipv4_session: aiohttp.ClientSession
-    _ipv6_session: aiohttp.ClientSession
     _delay_manager: DelayManager
+    _timeout: float
 
-    def __init__(self, pgpool: aiopg.Pool, ipv4_session: aiohttp.ClientSession, ipv6_session: aiohttp.ClientSession, delay_manager: DelayManager) -> None:
+    def __init__(self, pgpool: aiopg.Pool, delay_manager: DelayManager, timeout: float) -> None:
         self._pgpool = pgpool
-        self._ipv4_session = ipv4_session
-        self._ipv6_session = ipv6_session
         self._delay_manager = delay_manager
+        self._timeout = timeout
 
     async def _process_response(self, url: str, response: aiohttp.ClientResponse) -> UrlStatus:
         redirect_target = None
@@ -69,14 +75,43 @@ class HttpUrlProcessor(UrlProcessor):
 
             async with session.get(url, allow_redirects=True) as response:
                 return await self._process_response(url, response)
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, CancelledError):
             raise
         except Exception as e:
-            return classify_exception(e, url)
+            return UrlStatus(False, classify_exception(e, url))
 
     async def process_urls(self, urls: Iterable[str]) -> None:
-        for url in urls:
-            ipv4_status = await self._check_url(url, self._ipv4_session)
-            ipv6_status = await self._check_url(url, self._ipv6_session)
+        resolver = PrecachedAsyncResolver()
 
-            await update_url_status(self._pgpool, url, datetime.datetime.now(), ipv4_status, ipv6_status)
+        connector4 = aiohttp.TCPConnector(resolver=resolver, use_dns_cache=False, limit_per_host=1, family=socket.AF_INET)
+        connector6 = aiohttp.TCPConnector(resolver=resolver, use_dns_cache=False, limit_per_host=1, family=socket.AF_INET6)
+
+        timeout = aiohttp.ClientTimeout(total=self._timeout)
+        headers = {'User-Agent': USER_AGENT}
+
+        async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=timeout, headers=headers, connector=connector4) as session4:
+            async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=timeout, headers=headers, connector=connector6) as session6:
+                for url in urls:
+                    status4 = UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
+                    status6 = UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
+
+                    try:
+                        host = yarl.URL(url).host
+                    except Exception:
+                        pass
+                    else:
+                        dns = await resolver.get_host_status(host)
+
+                        if dns.ipv4.exception is not None:
+                            status4 = UrlStatus(False, classify_exception(dns.ipv4.exception, url))
+                        else:
+                            status6 = await self._check_url(url, session4)
+
+                        if dns.ipv6.exception is not None:
+                            status4 = UrlStatus(False, classify_exception(dns.ipv6.exception, url))
+                        else:
+                            status6 = await self._check_url(url, session6)
+
+                    await update_url_status(self._pgpool, url, datetime.datetime.now(), status4, status6)
+
+        await resolver.close()

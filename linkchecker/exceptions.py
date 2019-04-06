@@ -20,96 +20,134 @@ import errno
 import socket
 import sys
 import traceback
+from typing import Any, Optional
+
+import aiodns
 
 import aiohttp
 
-from linkchecker.status import ExtendedStatusCodes, UrlStatus
+import idna
+
+from linkchecker.status import ExtendedStatusCodes
 
 
-def print_exception_info(e: BaseException, url: str, prefix: str = '') -> None:
-    if url:
-        print('{}    Url: {}'.format(prefix, url), file=sys.stderr)
+def _full_class_name(cls: Any) -> str:
+    if cls.__module__ is None:
+        return str(cls.__name__)
+    else:
+        return str(cls.__module__ + '.' + cls.__name__)
+
+
+def _print_exception_info(e: BaseException, level: int = 0) -> None:
+    prefix = '  ' * level
+    print('{}  Class: {}'.format(prefix, _full_class_name(e.__class__)), file=sys.stderr)
     print('{}Message: {}'.format(prefix, str(e)), file=sys.stderr)
-    print('{}  Class: {}'.format(prefix, e.__class__.__name__), file=sys.stderr)
-    for c in e.__class__.mro():
-        print('{}  Super: {}'.format(prefix, c.__name__), file=sys.stderr)
-    if isinstance(e, OSError):
-        print('{}  Errno: {}'.format(prefix, e.errno), file=sys.stderr)
-
-    if e.__context__:
-        print('{}Context:'.format(prefix), file=sys.stderr)
-        print_exception_info(e.__context__, '', prefix + '  ')
+    print('{}  Bases: {}'.format(prefix, ', '.join((_full_class_name(cls) for cls in e.__class__.mro()))), file=sys.stderr)
+    errn = getattr(e, 'errno', None)
+    if errn:
+        print('{}  Errno: {}'.format(prefix, errn), file=sys.stderr)
 
     if e.__cause__:
         print('{}Cause:'.format(prefix), file=sys.stderr)
-        print_exception_info(e.__cause__, '', prefix + '  ')
+        _print_exception_info(e.__cause__, level + 1)
 
 
-def classify_exception(e: Exception, url: str) -> UrlStatus:
+def _classify_exception(e: BaseException) -> Optional[int]:
+    if isinstance(e, concurrent.futures.TimeoutError):
+        return ExtendedStatusCodes.TIMEOUT
+
     if isinstance(e, aiohttp.client_exceptions.TooManyRedirects):
-        return UrlStatus(False, ExtendedStatusCodes.TOO_MANY_REDIRECTS)
+        return ExtendedStatusCodes.TOO_MANY_REDIRECTS
 
     if isinstance(e, aiohttp.client_exceptions.ClientConnectorCertificateError):
-        return UrlStatus(False, ExtendedStatusCodes.SSL_ERROR)
+        return ExtendedStatusCodes.SSL_ERROR
 
     if isinstance(e, aiohttp.client_exceptions.ClientConnectorSSLError):
-        return UrlStatus(False, ExtendedStatusCodes.SSL_ERROR)
-
-    if isinstance(e, TimeoutError) or isinstance(e, concurrent.futures.TimeoutError):
-        return UrlStatus(False, ExtendedStatusCodes.TIMEOUT)
+        return ExtendedStatusCodes.SSL_ERROR
 
     if isinstance(e, aiohttp.client_exceptions.ServerDisconnectedError):
-        return UrlStatus(False, ExtendedStatusCodes.SERVER_DISCONNECTED)
+        return ExtendedStatusCodes.SERVER_DISCONNECTED
 
     if isinstance(e, ValueError) and str(e) == 'URL should be absolute':
-        return UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
+        return ExtendedStatusCodes.INVALID_URL
 
     if isinstance(e, ValueError) and str(e) == 'Can redirect only to http or https':
         # XXX
-        return UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
+        return ExtendedStatusCodes.INVALID_URL
 
     if isinstance(e, aiohttp.client_exceptions.InvalidURL):
-        return UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
+        return ExtendedStatusCodes.INVALID_URL
 
-    if isinstance(e, aiohttp.client_exceptions.ClientConnectorError):
-        if e.__cause__ and isinstance(e.__cause__, socket.gaierror):
-            return UrlStatus(False, ExtendedStatusCodes.DNS_ERROR)
+    if isinstance(e, UnicodeError):
+        return ExtendedStatusCodes.INVALID_URL
 
-        if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.ENETUNREACH:
-            return UrlStatus(False, ExtendedStatusCodes.NETWORK_UNREACHABLE)
+    if isinstance(e, idna.core.IDNAError):
+        return ExtendedStatusCodes.INVALID_URL
 
-        if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.ECONNRESET:
-            return UrlStatus(False, ExtendedStatusCodes.CONNECTION_RESET_BY_PEER)
+    if isinstance(e, socket.gaierror):
+        return ExtendedStatusCodes.DNS_ERROR
 
-        if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.ECONNREFUSED:
-            return UrlStatus(False, ExtendedStatusCodes.CONNECTION_REFUSED)
-
-        if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.EHOSTUNREACH:
-            return UrlStatus(False, ExtendedStatusCodes.HOST_UNREACHABLE)
-
-        if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.EADDRNOTAVAIL:
-            return UrlStatus(False, ExtendedStatusCodes.ADDRESS_NOT_AVAILABLE)
-
-        if e.__cause__ and isinstance(e.__cause__, ConnectionResetError):
-            return UrlStatus(False, ExtendedStatusCodes.CONNECTION_RESET_BY_PEER)
-
-        if e.__cause__ and isinstance(e.__cause__, ConnectionAbortedError):
-            return UrlStatus(False, ExtendedStatusCodes.CONNECTION_ABORTED)
-
-        if e.__cause__ and isinstance(e.__cause__, OSError) and e.__cause__.errno == errno.EINVAL:
-            # x42-plugins.com on IP ::ffff:85.214.110.134
-            return UrlStatus(False, ExtendedStatusCodes.UNKNOWN_ERROR)
-
-    if isinstance(e, aiohttp.client_exceptions.ClientResponseError):
-        if e.__cause__ and isinstance(e.__cause__, aiohttp.http_exceptions.BadHttpMessage):
-            return UrlStatus(False, ExtendedStatusCodes.BAD_HTTP)
+    if isinstance(e, OSError) and e.errno == errno.ENETUNREACH:
+        return ExtendedStatusCodes.NETWORK_UNREACHABLE
 
     if isinstance(e, OSError) and e.errno == errno.ECONNRESET:
-        return UrlStatus(False, ExtendedStatusCodes.CONNECTION_RESET_BY_PEER)
+        return ExtendedStatusCodes.CONNECTION_RESET_BY_PEER
 
-    print('=' * 75, file=sys.stderr)
-    print_exception_info(e, url)
+    if isinstance(e, OSError) and e.errno == errno.ECONNREFUSED:
+        return ExtendedStatusCodes.CONNECTION_REFUSED
 
-    traceback.print_exc(file=sys.stderr)
+    if isinstance(e, OSError) and e.errno == errno.EHOSTUNREACH:
+        return ExtendedStatusCodes.HOST_UNREACHABLE
 
-    return UrlStatus(False, ExtendedStatusCodes.UNKNOWN_ERROR)
+    if isinstance(e, OSError) and e.errno == errno.EADDRNOTAVAIL:
+        return ExtendedStatusCodes.ADDRESS_NOT_AVAILABLE
+
+    if isinstance(e, ConnectionResetError):
+        return ExtendedStatusCodes.CONNECTION_RESET_BY_PEER
+
+    if isinstance(e, ConnectionAbortedError):
+        return ExtendedStatusCodes.CONNECTION_ABORTED
+
+    if isinstance(e, OSError) and e.errno == errno.EINVAL:
+        # x42-plugins.com on IP ::ffff:85.214.110.134
+        return ExtendedStatusCodes.UNKNOWN_ERROR
+
+    if isinstance(e, aiohttp.http_exceptions.BadHttpMessage):
+        return ExtendedStatusCodes.BAD_HTTP
+
+    if isinstance(e, OSError) and e.errno == errno.ECONNRESET:
+        return ExtendedStatusCodes.CONNECTION_RESET_BY_PEER
+
+    if isinstance(e, aiodns.error.DNSError) and e.args[0] == 1:  # ARES_ENODATA
+        return ExtendedStatusCodes.DNS_DOMAIN_NOT_FOUND
+
+    if isinstance(e, aiodns.error.DNSError) and e.args[0] == 3:  # ARES_ESERVFAIL
+        return ExtendedStatusCodes.DNS_SERVFAIL
+
+    if isinstance(e, aiodns.error.DNSError) and e.args[0] == 4:  # ARES_ENOTFOUND
+        return ExtendedStatusCodes.DNS_NO_ADDRESS_RECORD
+
+    if isinstance(e, aiodns.error.DNSError) and e.args[0] == 8:  # ARES_EBADNAME
+        return ExtendedStatusCodes.INVALID_URL
+
+    if isinstance(e, aiodns.error.DNSError):
+        return ExtendedStatusCodes.DNS_ERROR
+
+    if e.__cause__:
+        return _classify_exception(e.__cause__)
+
+    return None
+
+
+def classify_exception(e: BaseException, url: str) -> int:
+    code = _classify_exception(e)
+    if code is not None:
+        return code
+
+    print('=' * 78, file=sys.stderr)
+    print('Cannot classify error when checking {}:'.format(url), file=sys.stderr)
+    _print_exception_info(e)
+    print('Traceback:', file=sys.stderr)
+    traceback.print_stack()
+
+    return ExtendedStatusCodes.UNKNOWN_ERROR
