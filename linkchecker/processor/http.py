@@ -95,6 +95,9 @@ class HttpUrlProcessor(UrlProcessor):
                     try:
                         host = yarl.URL(url).host
                     except Exception:
+                        host = None
+
+                    if host is None:
                         errstatus = UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
                         await update_url_status(self._pgpool, url, datetime.datetime.now(), errstatus, errstatus)
                         continue
