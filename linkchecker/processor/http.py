@@ -92,25 +92,24 @@ class HttpUrlProcessor(UrlProcessor):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=timeout, headers=headers, connector=connector4) as session4:
             async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=timeout, headers=headers, connector=connector6) as session6:
                 for url in urls:
-                    status4 = UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
-                    status6 = UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
-
                     try:
                         host = yarl.URL(url).host
                     except Exception:
-                        pass
+                        errstatus = UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
+                        await update_url_status(self._pgpool, url, datetime.datetime.now(), errstatus, errstatus)
+                        continue
+
+                    dns = await resolver.get_host_status(host)
+
+                    if dns.ipv4.exception is not None:
+                        status4 = UrlStatus(False, classify_exception(dns.ipv4.exception, url))
                     else:
-                        dns = await resolver.get_host_status(host)
+                        status6 = await self._check_url(url, session4)
 
-                        if dns.ipv4.exception is not None:
-                            status4 = UrlStatus(False, classify_exception(dns.ipv4.exception, url))
-                        else:
-                            status6 = await self._check_url(url, session4)
-
-                        if dns.ipv6.exception is not None:
-                            status4 = UrlStatus(False, classify_exception(dns.ipv6.exception, url))
-                        else:
-                            status6 = await self._check_url(url, session6)
+                    if dns.ipv6.exception is not None:
+                        status4 = UrlStatus(False, classify_exception(dns.ipv6.exception, url))
+                    else:
+                        status6 = await self._check_url(url, session6)
 
                     await update_url_status(self._pgpool, url, datetime.datetime.now(), status4, status6)
 
