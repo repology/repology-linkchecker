@@ -107,10 +107,10 @@ class HttpUrlProcessor(UrlProcessor):
                     if dns.ipv4.exception is not None:
                         status4 = UrlStatus(False, classify_exception(dns.ipv4.exception, url))
                     else:
-                        status6 = await self._check_url(url, session4)
+                        status4 = await self._check_url(url, session4)
 
                     if dns.ipv6.exception is not None:
-                        status4 = UrlStatus(False, classify_exception(dns.ipv6.exception, url))
+                        status6 = UrlStatus(False, classify_exception(dns.ipv6.exception, url))
                     else:
                         status6 = await self._check_url(url, session6)
 
