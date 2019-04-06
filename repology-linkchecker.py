@@ -52,12 +52,13 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
 
     run_number = 0
 
-    def print_statistics(*args: Any) -> None:
+    def print_statistics(*args: Any, status: str = 'in progress') -> None:
         stats = worker_pool.get_statistics()
 
         print(
-            'Run #{} finished: {} urls scanned, {} submitted for processing, {} processed'.format(
+            'Run #{} {}: {} urls scanned, {} submitted for processing, {} processed'.format(
                 run_number,
+                status,
                 stats.scanned,
                 stats.submitted,
                 stats.processed
@@ -76,7 +77,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
         async for url in iterate_urls_to_recheck(pgpool, datetime.timedelta(seconds=options.recheck_age)):
             await worker_pool.add_url(url)
 
-        print_statistics()
+        print_statistics(status='finished')
 
         if options.single_run:
             await worker_pool.join()
