@@ -26,6 +26,7 @@ class WorkerPoolStatistics:
     scanned: int = 0
     submitted: int = 0
     processed: int = 0
+    workers: int = 0
 
 
 class _HostWorker:
@@ -137,6 +138,7 @@ class HostWorkerPool:
         self._stats.processed += processed
 
     def get_statistics(self) -> WorkerPoolStatistics:
+        self._stats.workers = len(self._workers)
         return self._stats
 
     def reset_statistics(self) -> None:
