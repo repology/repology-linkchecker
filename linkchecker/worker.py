@@ -35,21 +35,23 @@ class _HostWorker:
     _in_processing: MutableSet[str]
     _task: asyncio.Task  # type: ignore
     _pool: 'HostWorkerPool'
+    _max_queue: int
 
-    def __init__(self, processor: UrlProcessor, pool: 'HostWorkerPool', hostname: str) -> None:
+    def __init__(self, processor: UrlProcessor, pool: 'HostWorkerPool', hostname: str, max_queue: int) -> None:
         self._hostname = hostname
         self._processor = processor
         self._queue = set()
         self._in_processing = set()
         self._task = asyncio.create_task(self.run())
         self._pool = pool
+        self._max_queue = max_queue
 
     def add_url(self, url: str) -> None:
         if url in self._in_processing:
             return
 
         # just add the new url if the queue is not full
-        if len(self._queue) < 100:
+        if len(self._queue) < self._max_queue:
             self._queue.add(url)
             return
 
@@ -75,7 +77,7 @@ class _HostWorker:
 
 class HostWorkerPool:
     # _processor: UrlsProcessor  # confuses mypy
-    _max_host_workers: int
+    _max_workers: int
     _max_host_queue: int
 
     _workers: Dict[str, _HostWorker]
@@ -84,9 +86,9 @@ class HostWorkerPool:
 
     _stats: WorkerPoolStatistics
 
-    def __init__(self, processor: UrlProcessor, max_host_workers: int = 100, max_host_queue: int = 100) -> None:
+    def __init__(self, processor: UrlProcessor, max_workers: int = 100, max_host_queue: int = 100) -> None:
         self._processor = processor
-        self._max_host_workers = max_host_workers
+        self._max_workers = max_workers
         self._max_host_queue = max_host_queue
 
         self._workers = {}
@@ -114,10 +116,15 @@ class HostWorkerPool:
         hostname = get_hostname(url)
 
         if hostname not in self._workers:
-            while len(self._workers) >= self._max_host_workers:
+            while len(self._workers) >= self._max_workers:
                 await self._join_some_workers()
 
-            self._workers[hostname] = _HostWorker(self._processor, self, hostname)
+            self._workers[hostname] = _HostWorker(
+                processor=self._processor,
+                pool=self,
+                hostname=hostname,
+                max_queue=self._max_host_queue
+            )
 
         self._workers[hostname].add_url(url)
 

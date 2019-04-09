@@ -48,7 +48,11 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     http_processor = HttpUrlProcessor(pgpool, delay_manager, options.timeout)
     dispatcher = DispatchingUrlProcessor(dummy_processor, http_processor)
 
-    worker_pool = HostWorkerPool(dispatcher)
+    worker_pool = HostWorkerPool(
+        processor=dispatcher,
+        max_workers=options.max_workers,
+        max_host_queue=options.max_host_queue
+    )
 
     run_number = 0
 
@@ -98,7 +102,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--delay', type=float, default=3.0, help='delay between requests to the same host')
     parser.add_argument('--timeout', type=int, default=60, help='timeout for each check')
 
-    parser.add_argument('--max-host-workers', type=int, default=100, help='maximum number of parallel host workers')
+    parser.add_argument('--max-workers', type=int, default=100, help='maximum number of parallel workers')
     parser.add_argument('--max-host-queue', type=int, default=100, help='maximum depth of per-host url queue')
 
     parser.add_argument('--single-run', action='store_true', help='exit after single run')
