@@ -82,13 +82,13 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
         async for url in iterate_urls_to_recheck(pgpool, datetime.timedelta(seconds=options.recheck_age)):
             await worker_pool.add_url(url)
 
-        print_statistics(status='finished')
-
         if options.single_run:
             await worker_pool.join()
             return
 
         await asyncio.sleep(60)
+
+        print_statistics(status='finished')
 
 
 def parse_arguments() -> argparse.Namespace:
