@@ -119,13 +119,13 @@ def _classify_exception(e: BaseException) -> Optional[int]:
         return ExtendedStatusCodes.CONNECTION_RESET_BY_PEER
 
     if isinstance(e, aiodns.error.DNSError) and e.args[0] == 1:  # ARES_ENODATA
-        return ExtendedStatusCodes.DNS_DOMAIN_NOT_FOUND
+        return ExtendedStatusCodes.DNS_NO_ADDRESS_RECORD
 
     if isinstance(e, aiodns.error.DNSError) and e.args[0] == 3:  # ARES_ESERVFAIL
         return ExtendedStatusCodes.DNS_SERVFAIL
 
     if isinstance(e, aiodns.error.DNSError) and e.args[0] == 4:  # ARES_ENOTFOUND
-        return ExtendedStatusCodes.DNS_NO_ADDRESS_RECORD
+        return ExtendedStatusCodes.DNS_DOMAIN_NOT_FOUND
 
     if isinstance(e, aiodns.error.DNSError) and e.args[0] == 8:  # ARES_EBADNAME
         return ExtendedStatusCodes.INVALID_URL
