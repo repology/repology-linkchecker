@@ -6,6 +6,7 @@ GRANT ALL PRIVILEGES ON DATABASE repology_test TO repology_test;
 
 CREATE TABLE links (
     url text NOT NULL PRIMARY KEY,
+    next_check timestamp with time zone NOT NULL DEFAULT now(),
     last_checked timestamp with time zone,
 
 	ipv4_last_success timestamp with time zone,
