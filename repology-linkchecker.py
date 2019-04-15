@@ -107,7 +107,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--dsn', default=config['DSN'], help='database connection params')
 
     parser.add_argument('--recheck-age', type=int, default=604800, help='min age for recheck in seconds')
-    parser.add_argument('--recheck-jitter', type=int, default=3600, help='jitter time to smooth recheck rate')
+    parser.add_argument('--recheck-jitter', type=int, default=86400, help='jitter time to smooth recheck rate')
     parser.add_argument('--delay', type=float, default=3.0, help='delay between requests to the same host')
     parser.add_argument('--timeout', type=int, default=60, help='timeout for each check')
 
