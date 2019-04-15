@@ -23,41 +23,46 @@ import aiopg
 from linkchecker.status import UrlStatus
 
 
-async def iterate_urls_to_recheck(pool: aiopg.Pool, age: datetime.timedelta) -> AsyncIterator[str]:
+async def iterate_urls_to_recheck(pool: aiopg.Pool) -> AsyncIterator[str]:
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 """
                 SELECT url
                 FROM links
-                WHERE last_checked IS NULL OR last_checked < now() - %(age)s
-                """,
-                {
-                    'age': age
-                }
+                WHERE next_check < now()
+                """
             )
 
             async for row in cur:
                 yield row[0]
 
 
-async def update_url_status(pool: aiopg.Pool, url: str, time: datetime.datetime, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus]) -> None:
+async def update_url_status(
+    pool: aiopg.Pool,
+    url: str,
+    check_time: datetime.datetime,
+    next_check_time: datetime.datetime,
+    ipv4_status: Optional[UrlStatus],
+    ipv6_status: Optional[UrlStatus]
+) -> None:
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 """
                 UPDATE links
                 SET
-                    last_checked = %(time)s,
+                    next_check = %(next_check_time)s,
+                    last_checked = %(check_time)s,
 
-                    ipv4_last_success = CASE WHEN     %(ipv4_success)s THEN %(time)s ELSE ipv4_last_success END,
-                    ipv4_last_failure = CASE WHEN NOT %(ipv4_success)s THEN %(time)s ELSE ipv4_last_failure END,
+                    ipv4_last_success = CASE WHEN     %(ipv4_success)s THEN %(check_time)s ELSE ipv4_last_success END,
+                    ipv4_last_failure = CASE WHEN NOT %(ipv4_success)s THEN %(check_time)s ELSE ipv4_last_failure END,
                     ipv4_success = %(ipv4_success)s,
                     ipv4_status_code = %(ipv4_status_code)s,
                     ipv4_permanent_redirect_target = %(ipv4_permanent_redirect_target)s,
 
-                    ipv6_last_success = CASE WHEN     %(ipv6_success)s THEN %(time)s ELSE ipv6_last_success END,
-                    ipv6_last_failure = CASE WHEN NOT %(ipv6_success)s THEN %(time)s ELSE ipv6_last_failure END,
+                    ipv6_last_success = CASE WHEN     %(ipv6_success)s THEN %(check_time)s ELSE ipv6_last_success END,
+                    ipv6_last_failure = CASE WHEN NOT %(ipv6_success)s THEN %(check_time)s ELSE ipv6_last_failure END,
                     ipv6_success = %(ipv6_success)s,
                     ipv6_status_code = %(ipv6_status_code)s,
                     ipv6_permanent_redirect_target = %(ipv6_permanent_redirect_target)s
@@ -65,7 +70,8 @@ async def update_url_status(pool: aiopg.Pool, url: str, time: datetime.datetime,
                 """,
                 {
                     'url': url,
-                    'time': time,
+                    'check_time': check_time,
+                    'next_check_time': next_check_time,
 
                     'ipv4_success': ipv4_status.success if ipv4_status is not None else None,
                     'ipv4_status_code': ipv4_status.status_code if ipv4_status is not None else None,

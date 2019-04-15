@@ -16,6 +16,7 @@
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
+import random
 from typing import Optional
 
 import aiopg
@@ -26,10 +27,15 @@ from linkchecker.status import UrlStatus
 
 class UrlUpdater:
     _pgpool: aiopg.Pool
+    _recheck_age: datetime.timedelta
+    _recheck_jitter: datetime.timedelta
 
-    def __init__(self, pgpool: aiopg.Pool) -> None:
+    def __init__(self, pgpool: aiopg.Pool, recheck_age: datetime.timedelta, recheck_jitter: datetime.timedelta) -> None:
         self._pgpool = pgpool
+        self._recheck_age = recheck_age
+        self._recheck_jitter = recheck_jitter
 
     async def update(self, url: str, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus]) -> None:
-        timestamp = datetime.datetime.now()
-        await update_url_status(self._pgpool, url, timestamp, ipv4_status, ipv6_status)
+        check_time = datetime.datetime.now()
+        next_check_time = check_time + self._recheck_age + self._recheck_jitter * random.random()
+        await update_url_status(self._pgpool, url, check_time, next_check_time, ipv4_status, ipv6_status)

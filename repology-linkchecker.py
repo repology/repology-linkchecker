@@ -45,7 +45,11 @@ except ImportError:
 async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     delay_manager = DelayManager(options.delay)
 
-    updater = UrlUpdater(pgpool)
+    updater = UrlUpdater(
+        pgpool,
+        datetime.timedelta(seconds=options.recheck_age),
+        datetime.timedelta(seconds=options.recheck_jitter)
+    )
 
     dummy_processor = DummyUrlProcessor(updater)
     http_processor = HttpUrlProcessor(updater, delay_manager, options.timeout)
@@ -82,7 +86,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
         worker_pool.reset_statistics()
 
         # process all urls which need processing
-        async for url in iterate_urls_to_recheck(pgpool, datetime.timedelta(seconds=options.recheck_age)):
+        async for url in iterate_urls_to_recheck(pgpool):
             await worker_pool.add_url(url)
 
         if options.single_run:
@@ -103,6 +107,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--dsn', default=config['DSN'], help='database connection params')
 
     parser.add_argument('--recheck-age', type=int, default=604800, help='min age for recheck in seconds')
+    parser.add_argument('--recheck-jitter', type=int, default=3600, help='jitter time to smooth recheck rate')
     parser.add_argument('--delay', type=float, default=3.0, help='delay between requests to the same host')
     parser.add_argument('--timeout', type=int, default=60, help='timeout for each check')
 
