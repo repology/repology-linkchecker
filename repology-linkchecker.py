@@ -31,6 +31,7 @@ from linkchecker.processor.dispatching import DispatchingUrlProcessor
 from linkchecker.processor.dummy import DummyUrlProcessor
 from linkchecker.processor.http import HttpUrlProcessor
 from linkchecker.queries import iterate_urls_to_recheck
+from linkchecker.updater import UrlUpdater
 from linkchecker.worker import HostWorkerPool
 
 
@@ -44,8 +45,10 @@ except ImportError:
 async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     delay_manager = DelayManager(options.delay)
 
-    dummy_processor = DummyUrlProcessor(pgpool)
-    http_processor = HttpUrlProcessor(pgpool, delay_manager, options.timeout)
+    updater = UrlUpdater(pgpool)
+
+    dummy_processor = DummyUrlProcessor(updater)
+    http_processor = HttpUrlProcessor(updater, delay_manager, options.timeout)
     dispatcher = DispatchingUrlProcessor(dummy_processor, http_processor)
 
     worker_pool = HostWorkerPool(

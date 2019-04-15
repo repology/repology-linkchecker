@@ -15,18 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Iterable
+import datetime
+from typing import Optional
 
-from linkchecker.processor import UrlProcessor
-from linkchecker.updater import UrlUpdater
+import aiopg
+
+from linkchecker.queries import update_url_status
+from linkchecker.status import UrlStatus
 
 
-class DummyUrlProcessor(UrlProcessor):
-    _url_updater: UrlUpdater
+class UrlUpdater:
+    _pgpool: aiopg.Pool
 
-    def __init__(self, url_updater: UrlUpdater) -> None:
-        self._url_updater = url_updater
+    def __init__(self, pgpool: aiopg.Pool) -> None:
+        self._pgpool = pgpool
 
-    async def process_urls(self, urls: Iterable[str]) -> None:
-        for url in urls:
-            await self._url_updater.update(url, None, None)
+    async def update(self, url: str, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus]) -> None:
+        timestamp = datetime.datetime.now()
+        await update_url_status(self._pgpool, url, timestamp, ipv4_status, ipv6_status)

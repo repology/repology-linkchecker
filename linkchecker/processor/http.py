@@ -16,7 +16,6 @@
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-import datetime
 import socket
 from concurrent.futures import CancelledError
 from typing import Iterable
@@ -24,14 +23,12 @@ from urllib.parse import urljoin
 
 import aiohttp
 
-import aiopg
-
 from linkchecker.delay import DelayManager
 from linkchecker.exceptions import classify_exception
 from linkchecker.processor import UrlProcessor
-from linkchecker.queries import update_url_status
 from linkchecker.resolver import PrecachedAsyncResolver
 from linkchecker.status import ExtendedStatusCodes, UrlStatus
+from linkchecker.updater import UrlUpdater
 
 import yarl
 
@@ -40,12 +37,12 @@ USER_AGENT = 'repology-linkchecker/1 beta (+{}/bots)'.format('https://repology.o
 
 
 class HttpUrlProcessor(UrlProcessor):
-    _pgpool: aiopg.Pool
+    _url_updater: UrlUpdater
     _delay_manager: DelayManager
     _timeout: float
 
-    def __init__(self, pgpool: aiopg.Pool, delay_manager: DelayManager, timeout: float) -> None:
-        self._pgpool = pgpool
+    def __init__(self, url_updater: UrlUpdater, delay_manager: DelayManager, timeout: float) -> None:
+        self._url_updater = url_updater
         self._delay_manager = delay_manager
         self._timeout = timeout
 
@@ -99,7 +96,7 @@ class HttpUrlProcessor(UrlProcessor):
 
                     if host is None:
                         errstatus = UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
-                        await update_url_status(self._pgpool, url, datetime.datetime.now(), errstatus, errstatus)
+                        await self._url_updater.update(url, errstatus, errstatus)
                         continue
 
                     dns = await resolver.get_host_status(host)
@@ -114,6 +111,6 @@ class HttpUrlProcessor(UrlProcessor):
                     else:
                         status6 = await self._check_url(url, session6)
 
-                    await update_url_status(self._pgpool, url, datetime.datetime.now(), status4, status6)
+                    await self._url_updater.update(url, status4, status6)
 
         await resolver.close()
