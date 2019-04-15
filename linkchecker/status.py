@@ -29,6 +29,8 @@ class ExtendedStatusCodes:
     DNS_ERROR: ClassVar[int] = -200
     DNS_DOMAIN_NOT_FOUND: ClassVar[int] = -201
     DNS_NO_ADDRESS_RECORD: ClassVar[int] = -202
+    DNS_REFUSED: ClassVar[int] = -203
+    DNS_TIMEOUT: ClassVar[int] = -204
 
     # Connection errors
     CONNECTION_REFUSED: ClassVar[int] = -300

@@ -127,6 +127,12 @@ def _classify_exception(e: BaseException) -> Optional[int]:
     if isinstance(e, aiodns.error.DNSError) and e.args[0] == 8:  # ARES_EBADNAME
         return ExtendedStatusCodes.INVALID_URL
 
+    if isinstance(e, aiodns.error.DNSError) and e.args[0] == 11:  # ARES_ECONNREFUSED
+        return ExtendedStatusCodes.DNS_REFUSED
+
+    if isinstance(e, aiodns.error.DNSError) and e.args[0] == 12:  # ARES_ETIMEOUT
+        return ExtendedStatusCodes.DNS_TIMEOUT
+
     if isinstance(e, aiodns.error.DNSError):
         return ExtendedStatusCodes.DNS_ERROR
 
