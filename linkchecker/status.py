@@ -39,12 +39,19 @@ class ExtendedStatusCodes:
     NETWORK_UNREACHABLE: ClassVar[int] = -303
     SERVER_DISCONNECTED: ClassVar[int] = -304
     CONNECTION_ABORTED: ClassVar[int] = -306
-    ADDRESS_NOT_AVAILABLE: ClassVar[int] = -307  # most likely host running checker dosn't support IPv6
+    ADDRESS_NOT_AVAILABLE: ClassVar[int] = -307
 
     # HTTP
     TOO_MANY_REDIRECTS: ClassVar[int] = -400
-    SSL_ERROR: ClassVar[int] = -401
     BAD_HTTP: ClassVar[int] = -402
+
+    # SSL
+    SSL_ERROR: ClassVar[int] = -500
+    SSL_CERTIFICATE_HAS_EXPIRED: ClassVar[int] = -501
+    SSL_CERTIFICATE_HOSTNAME_MISMATCH: ClassVar[int] = -502
+    SSL_CERTIFICATE_SELF_SIGNED: ClassVar[int] = -503
+    SSL_CERTIFICATE_SELF_SIGNED_IN_CHAIN: ClassVar[int] = -504
+    SSL_CERTIFICATE_INCOMPLETE_CHAIN: ClassVar[int] = -505
 
 
 class UrlStatus:

@@ -59,6 +59,21 @@ def _classify_exception(e: BaseException) -> Optional[int]:
     if isinstance(e, aiohttp.client_exceptions.TooManyRedirects):
         return ExtendedStatusCodes.TOO_MANY_REDIRECTS
 
+    if isinstance(e, aiohttp.client_exceptions.ClientConnectorCertificateError) and e.certificate_error.verify_code == 10:  # X509_V_ERR_CERT_HAS_EXPIRED
+        return ExtendedStatusCodes.SSL_CERTIFICATE_HAS_EXPIRED
+
+    if isinstance(e, aiohttp.client_exceptions.ClientConnectorCertificateError) and e.certificate_error.verify_code == 18:  # X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
+        return ExtendedStatusCodes.SSL_CERTIFICATE_SELF_SIGNED
+
+    if isinstance(e, aiohttp.client_exceptions.ClientConnectorCertificateError) and e.certificate_error.verify_code == 19:  # X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN
+        return ExtendedStatusCodes.SSL_CERTIFICATE_SELF_SIGNED_IN_CHAIN
+
+    if isinstance(e, aiohttp.client_exceptions.ClientConnectorCertificateError) and e.certificate_error.verify_code == 20:  # X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+        return ExtendedStatusCodes.SSL_CERTIFICATE_INCOMPLETE_CHAIN
+
+    if isinstance(e, aiohttp.client_exceptions.ClientConnectorCertificateError) and e.certificate_error.verify_code == 62:  # X509_V_ERR_HOSTNAME_MISMATCH
+        return ExtendedStatusCodes.SSL_CERTIFICATE_HOSTNAME_MISMATCH
+
     if isinstance(e, aiohttp.client_exceptions.ClientConnectorCertificateError):
         return ExtendedStatusCodes.SSL_ERROR
 
