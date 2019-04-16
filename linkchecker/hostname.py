@@ -23,5 +23,7 @@ def get_hostname(url: str) -> str:
 
     if hostname.startswith('www.'):
         return hostname[4:]
+    elif hostname.endswith('.sourceforge.net') or hostname.endswith('.sf.net'):
+        return 'sourceforge.net'
     else:
         return hostname
