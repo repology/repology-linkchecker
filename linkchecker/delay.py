@@ -25,7 +25,7 @@ class DelayManager:
 
     _overrides: ClassVar[Dict[str, float]] = {
         'github.com': 1,
-        'notabug.org': 10,
+        'notabug.org': 30,
         'npmjs.com': 10,
         'npmjs.org': 10,
     }
