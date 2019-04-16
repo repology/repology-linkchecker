@@ -67,7 +67,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
         stats = worker_pool.get_statistics()
 
         print(
-            'Run #{} {}: {} urls scanned, {} submitted for processing, {} processed, {} workers running'.format(
+            'Run #{} {}: {} url(s) scanned, {} submitted for processing, {} processed, {} worker(s) running'.format(
                 run_number,
                 status,
                 stats.scanned,
