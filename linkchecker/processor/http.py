@@ -33,7 +33,7 @@ from linkchecker.updater import UrlUpdater
 import yarl
 
 
-USER_AGENT = 'repology-linkchecker/1 beta (+{}/bots)'.format('https://repology.org')
+USER_AGENT = 'repology-linkchecker/1 (+{}/bots)'.format('https://repology.org')
 
 
 class HttpUrlProcessor(UrlProcessor):
