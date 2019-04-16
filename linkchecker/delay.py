@@ -17,7 +17,7 @@
 
 from typing import ClassVar, Dict
 
-from linkchecker.hostname import get_hostname
+from linkchecker.hostkey import get_host_key
 
 
 class DelayManager:
@@ -34,4 +34,4 @@ class DelayManager:
         self._default_delay = default_delay
 
     def get_delay(self, url: str) -> float:
-        return DelayManager._overrides.get(get_hostname(url), self._default_delay)
+        return DelayManager._overrides.get(get_host_key(url), self._default_delay)

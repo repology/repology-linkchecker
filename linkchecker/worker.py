@@ -18,7 +18,7 @@
 import asyncio
 from typing import Dict, List, MutableSet
 
-from linkchecker.hostname import get_hostname
+from linkchecker.hostkey import get_host_key
 from linkchecker.processor import UrlProcessor
 
 
@@ -30,7 +30,7 @@ class WorkerPoolStatistics:
 
 
 class _HostWorker:
-    _hostname: str
+    _hostkey: str
     # _processor: UrlsProcessor  # confuses mypy
     _queue: MutableSet[str]
     _in_processing: MutableSet[str]
@@ -38,8 +38,8 @@ class _HostWorker:
     _pool: 'HostWorkerPool'
     _max_queue: int
 
-    def __init__(self, processor: UrlProcessor, pool: 'HostWorkerPool', hostname: str, max_queue: int) -> None:
-        self._hostname = hostname
+    def __init__(self, processor: UrlProcessor, pool: 'HostWorkerPool', hostkey: str, max_queue: int) -> None:
+        self._hostkey = hostkey
         self._processor = processor
         self._queue = set()
         self._in_processing = set()
@@ -70,7 +70,7 @@ class _HostWorker:
                 self._pool.update_statistics(processed=len(queue_to_process))
 
         finally:
-            self._pool.on_worker_finished(self._hostname)
+            self._pool.on_worker_finished(self._hostkey)
 
     async def join(self) -> None:
         await self._task
@@ -107,27 +107,27 @@ class HostWorkerPool:
 
         self._workers_finished = []
 
-    def on_worker_finished(self, hostname: str) -> None:
-        self._workers_finished.append(self._workers.pop(hostname))
+    def on_worker_finished(self, hostkey: str) -> None:
+        self._workers_finished.append(self._workers.pop(hostkey))
         self._worker_has_finished.set()
 
     async def add_url(self, url: str) -> None:
         self._stats.scanned += 1
 
-        hostname = get_hostname(url)
+        hostkey = get_host_key(url)
 
-        if hostname not in self._workers:
+        if hostkey not in self._workers:
             while len(self._workers) >= self._max_workers:
                 await self._join_some_workers()
 
-            self._workers[hostname] = _HostWorker(
+            self._workers[hostkey] = _HostWorker(
                 processor=self._processor,
                 pool=self,
-                hostname=hostname,
+                hostkey=hostkey,
                 max_queue=self._max_host_queue
             )
 
-        self._workers[hostname].add_url(url)
+        self._workers[hostkey].add_url(url)
 
     async def join(self) -> None:
         while self._workers:
