@@ -7,13 +7,16 @@ FLAKE8_ARGS+=	--max-line-length 88  # same as black
 MYPY_ARGS+=	--strict --ignore-missing-imports
 BLACK_ARGS=	--skip-string-normalization
 
-lint:: flake8 mypy
+lint:: flake8 mypy test
 
 flake8:
 	${FLAKE8} ${FLAKE8_ARGS} repology-linkchecker.py linkchecker
 
 mypy:
 	${MYPY} ${MYPY_ARGS} repology-linkchecker.py
+
+test:
+	python3 -m unittest discover
 
 black:
 	${BLACK} ${BLACK_ARGS} --check repology-linkchecker.py linkchecker/**/*.py
