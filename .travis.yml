@@ -30,7 +30,7 @@ before_install:
 script:
   - make flake8
   - make mypy
-  - COVERAGE_FILE=.coverage.tst coverage run --source=linkchecker -m unittest discover
+  - COVERAGE_FILE=.coverage.tst coverage run --source=repology-linkchecker.py,linkchecker -m unittest discover
   - COVERAGE_FILE=.coverage.run coverage run --source=repology-linkchecker.py,linkchecker repology-linkchecker.py --dsn "dbname=repology user=repology password=repology" --single-run
   - coverage combine
   - psql -U repology -x -c 'SELECT * FROM links'
