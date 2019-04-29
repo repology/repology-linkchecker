@@ -15,7 +15,7 @@ flake8:
 mypy:
 	${MYPY} ${MYPY_ARGS} repology-linkchecker.py
 
-test:
+test::
 	python3 -m unittest discover
 
 black:
