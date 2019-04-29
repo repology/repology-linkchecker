@@ -28,7 +28,7 @@ class DummyUrlProcessor(UrlProcessor):
         self._url_updater = url_updater
 
     def taste(self, url: str) -> bool:
-        return True
+        return True  # pragma: no cover
 
     async def process_urls(self, urls: Iterable[str]) -> None:
         for url in urls:

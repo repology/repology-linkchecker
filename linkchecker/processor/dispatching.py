@@ -32,7 +32,7 @@ class DispatchingUrlProcessor(UrlProcessor):
         self._blacklisted_processor = blacklisted_processor
 
     def taste(self, url: str) -> bool:
-        return True
+        return True  # pragma: no cover
 
     async def process_urls(self, urls: Iterable[str]) -> None:
         http_urls = []
