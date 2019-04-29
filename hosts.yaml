@@ -2,12 +2,12 @@
 # per-host overrides
 #
 github.com: { delay: 1 }
-notabug.org: { delay: 30 }
+github.io: { delay: 1, aggregate: true }
+notabug.org: { delay: 60 }
 npmjs.com: { delay: 10 }
 npmjs.org: { delay: 10 }
-
-sourceforge.net: { aggregate: true }
 sf.net: { aggregate: true }
+sourceforge.net: { aggregate: true }
 
 #
 # blacklist
