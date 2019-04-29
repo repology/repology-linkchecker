@@ -8,3 +8,25 @@ npmjs.org: { delay: 10 }
 
 sourceforge.net: { aggregate: true }
 sf.net: { aggregate: true }
+
+#
+# blacklist
+#
+
+# redirects to https://www.bestsevenreviews.com/best-linux-distros/ garbage
+mepis.org: { blacklist: true }
+
+# overtaken over by some iPhone Photography Equipment crap
+qtoctave.wordpress.com: { blacklist: true }
+
+# domain for sale
+nimuh.com: { blacklist: true }
+
+# overtaken by some game
+astroid.org: { blacklist: true }
+
+# overtaken by some french vpn "securify" garbage
+dejavu-fonts.org: { blacklist: true }
+
+# overtaken by some japanese company
+opentnl.org: { blacklist: true }
