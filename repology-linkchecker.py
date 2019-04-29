@@ -28,6 +28,7 @@ import aiopg
 
 from linkchecker.delay import DelayManager
 from linkchecker.hostmanager import HostManager
+from linkchecker.processor.blacklisted import BlacklistedUrlProcessor
 from linkchecker.processor.dispatching import DispatchingUrlProcessor
 from linkchecker.processor.dummy import DummyUrlProcessor
 from linkchecker.processor.http import HttpUrlProcessor
@@ -57,7 +58,8 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
 
     dummy_processor = DummyUrlProcessor(updater)
     http_processor = HttpUrlProcessor(updater, delay_manager, options.timeout)
-    dispatcher = DispatchingUrlProcessor(dummy_processor, http_processor)
+    blacklisted_processor = BlacklistedUrlProcessor(updater, host_manager)
+    dispatcher = DispatchingUrlProcessor(dummy_processor, http_processor, blacklisted_processor)
 
     worker_pool = HostWorkerPool(
         processor=dispatcher,

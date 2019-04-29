@@ -17,19 +17,25 @@
 
 from typing import Iterable
 
+from linkchecker.hostmanager import HostManager
 from linkchecker.processor import UrlProcessor
+from linkchecker.status import ExtendedStatusCodes, UrlStatus
 from linkchecker.updater import UrlUpdater
 
 
-class DummyUrlProcessor(UrlProcessor):
+class BlacklistedUrlProcessor(UrlProcessor):
     _url_updater: UrlUpdater
+    _host_manager: HostManager
 
-    def __init__(self, url_updater: UrlUpdater) -> None:
+    def __init__(self, url_updater: UrlUpdater, host_manager: HostManager) -> None:
         self._url_updater = url_updater
+        self._host_manager = host_manager
 
     def taste(self, url: str) -> bool:
-        return True
+        return self._host_manager.is_blacklisted(url)
 
     async def process_urls(self, urls: Iterable[str]) -> None:
+        status = UrlStatus(False, ExtendedStatusCodes.BLACKLISTED)
+
         for url in urls:
-            await self._url_updater.update(url, None, None)
+            await self._url_updater.update(url, status, status)

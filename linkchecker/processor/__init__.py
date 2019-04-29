@@ -22,5 +22,9 @@ from typing import Iterable
 
 class UrlProcessor(ABC):
     @abstractmethod
+    def taste(self, url: str) -> bool:
+        pass
+
+    @abstractmethod
     async def process_urls(self, urls: Iterable[str]) -> None:
         pass

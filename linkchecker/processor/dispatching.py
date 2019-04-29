@@ -24,22 +24,31 @@ from linkchecker.processor import UrlProcessor
 class DispatchingUrlProcessor(UrlProcessor):
     _dummy_processor: UrlProcessor
     _http_processor: UrlProcessor
+    _blacklisted_processor: UrlProcessor
 
-    def __init__(self, dummy_processor: UrlProcessor, http_processor: UrlProcessor) -> None:
+    def __init__(self, dummy_processor: UrlProcessor, http_processor: UrlProcessor, blacklisted_processor: UrlProcessor) -> None:
         self._dummy_processor = dummy_processor
         self._http_processor = http_processor
+        self._blacklisted_processor = blacklisted_processor
+
+    def taste(self, url: str) -> bool:
+        return True
 
     async def process_urls(self, urls: Iterable[str]) -> None:
         http_urls = []
         unsupported_urls = []
+        blacklisted_urls = []
 
         for url in urls:
-            if url.startswith('http://') or url.startswith('https://'):
+            if self._blacklisted_processor.taste(url):
+                blacklisted_urls.append(url)
+            elif self._http_processor.taste(url):
                 http_urls.append(url)
             else:
                 unsupported_urls.append(url)
 
         await asyncio.gather(
             self._dummy_processor.process_urls(unsupported_urls),
-            self._http_processor.process_urls(http_urls)
+            self._http_processor.process_urls(http_urls),
+            self._blacklisted_processor.process_urls(blacklisted_urls)
         )

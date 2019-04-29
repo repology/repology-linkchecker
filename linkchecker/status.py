@@ -24,6 +24,7 @@ class ExtendedStatusCodes:
     # Generic errors
     TIMEOUT: ClassVar[int] = -100
     INVALID_URL: ClassVar[int] = -101
+    BLACKLISTED: ClassVar[int] = -102
 
     # DNS
     DNS_ERROR: ClassVar[int] = -200

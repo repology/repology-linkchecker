@@ -46,6 +46,9 @@ class HttpUrlProcessor(UrlProcessor):
         self._delay_manager = delay_manager
         self._timeout = timeout
 
+    def taste(self, url: str) -> bool:
+        return url.startswith('http://') or url.startswith('https://')
+
     async def _process_response(self, url: str, response: aiohttp.ClientResponse) -> UrlStatus:
         redirect_target = None
 
