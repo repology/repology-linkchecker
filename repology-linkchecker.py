@@ -27,6 +27,7 @@ from typing import Any
 import aiopg
 
 from linkchecker.delay import DelayManager
+from linkchecker.hostmanager import HostManager
 from linkchecker.processor.dispatching import DispatchingUrlProcessor
 from linkchecker.processor.dummy import DummyUrlProcessor
 from linkchecker.processor.http import HttpUrlProcessor
@@ -43,7 +44,10 @@ except ImportError:
 
 
 async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
-    delay_manager = DelayManager(options.delay)
+    with open(options.hosts, 'r') as config_file:
+        host_manager = HostManager(config_file)
+
+    delay_manager = DelayManager(options.delay, host_manager)
 
     updater = UrlUpdater(
         pgpool,
@@ -57,6 +61,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
 
     worker_pool = HostWorkerPool(
         processor=dispatcher,
+        host_manager=host_manager,
         max_workers=options.max_workers,
         max_host_queue=options.max_host_queue
     )
@@ -105,6 +110,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--dsn', default=config['DSN'], help='database connection params')
+    parser.add_argument('--hosts', default='./hosts.yaml', help='path to host config file')
 
     parser.add_argument('--recheck-age', type=int, default=561600, help='min age for recheck in seconds')
     parser.add_argument('--recheck-jitter', type=int, default=86400, help='jitter time to smooth recheck rate')

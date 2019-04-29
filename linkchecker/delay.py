@@ -15,23 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import ClassVar, Dict
-
-from linkchecker.hostkey import get_host_key
+from linkchecker.hostmanager import HostManager
 
 
 class DelayManager:
     _default_delay: float
+    _host_manager: HostManager
 
-    _overrides: ClassVar[Dict[str, float]] = {
-        'github.com': 1,
-        'notabug.org': 30,
-        'npmjs.com': 10,
-        'npmjs.org': 10,
-    }
-
-    def __init__(self, default_delay: float) -> None:
+    def __init__(self, default_delay: float, host_manager: HostManager) -> None:
         self._default_delay = default_delay
+        self._host_manager = host_manager
 
     def get_delay(self, url: str) -> float:
-        return DelayManager._overrides.get(get_host_key(url), self._default_delay)
+        host_delay = self._host_manager.get_delay(url)
+        if host_delay is not None:
+            return host_delay
+        return self._default_delay

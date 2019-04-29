@@ -18,7 +18,7 @@
 import asyncio
 from typing import Dict, List, MutableSet
 
-from linkchecker.hostkey import get_host_key
+from linkchecker.hostmanager import HostManager
 from linkchecker.processor import UrlProcessor
 
 
@@ -78,6 +78,8 @@ class _HostWorker:
 
 class HostWorkerPool:
     # _processor: UrlsProcessor  # confuses mypy
+    _host_manager: HostManager
+
     _max_workers: int
     _max_host_queue: int
 
@@ -87,8 +89,10 @@ class HostWorkerPool:
 
     _stats: WorkerPoolStatistics
 
-    def __init__(self, processor: UrlProcessor, max_workers: int = 100, max_host_queue: int = 100) -> None:
+    def __init__(self, processor: UrlProcessor, host_manager: HostManager, max_workers: int = 100, max_host_queue: int = 100) -> None:
         self._processor = processor
+        self._host_manager = host_manager
+
         self._max_workers = max_workers
         self._max_host_queue = max_host_queue
 
@@ -114,7 +118,7 @@ class HostWorkerPool:
     async def add_url(self, url: str) -> None:
         self._stats.scanned += 1
 
-        hostkey = get_host_key(url)
+        hostkey = self._host_manager.get_hostkey(url)
 
         if hostkey not in self._workers:
             while len(self._workers) >= self._max_workers:
