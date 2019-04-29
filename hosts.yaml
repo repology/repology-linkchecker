@@ -30,3 +30,6 @@ dejavu-fonts.org: { blacklist: true }
 
 # overtaken by some japanese company
 opentnl.org: { blacklist: true }
+
+# overtaken by some japanese health company
+ofset.org: { blacklist: true }
