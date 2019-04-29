@@ -14,9 +14,11 @@ before_script:
   - sudo -u postgres psql < ci/create_database.sql
 before_install:
   # depends
+  - pip install PyYAML
   - pip install aiodns
   - pip install aiohttp
   - pip install aiopg
+  - pip install voluptuous
 
   # test depends
   - pip install coveralls
