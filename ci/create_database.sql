@@ -23,12 +23,13 @@ CREATE TABLE links (
 );
 
 INSERT INTO links(url) VALUES
-	('badschema://repology.org/'),        -- bad schema
-	('ftp://nonexistent.repology.org/'),
-	('ftp://repology.org/nonexistent'),
-	('http://repology.org/'),
+	('https://repology.org/'),             -- good
+	('http://repology.org/'),              -- good + permanent redirect
+	('badschema://repology.org/'),         -- bad schema
+	('ftp://nonexistent.repology.org/'),   -- ftp
+	('ftp://repology.org/nonexistent'),    -- ftp
 	('https://nonexistent.repology.org/'), -- nonexistent hostname
-	('https://repology.org/'),
+	('https://repology.org:444/'),         -- cannot connect
 	('https://repology.org/nonexistent'),  -- nonexistent path (404)
 	('https://./'),                        -- bad url
 	('https://mepis.org/foo');             -- blacklisted url
