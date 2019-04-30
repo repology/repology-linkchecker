@@ -32,6 +32,7 @@ class DispatchingUrlProcessor(UrlProcessor):
     async def process_urls(self, urls: Iterable[str]) -> None:
         urls_for_processor: List[List[str]] = [[] for p in self._processors]
 
+        # sort urls into queues for each processor
         for url in urls:
             for processor, queue in zip(self._processors, urls_for_processor):
                 if processor.taste(url):
@@ -40,6 +41,7 @@ class DispatchingUrlProcessor(UrlProcessor):
             else:
                 raise RuntimeError('Cannot find processor for URL {}'.format(url))
 
+        # run each processor sequentionally (for politeness)
         for processor, queue in zip(self._processors, urls_for_processor):
             if queue:
                 await processor.process_urls(queue)
