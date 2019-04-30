@@ -118,6 +118,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--dsn', default=config['DSN'], help='database connection params')
+    parser.add_argument('--max-db-connections', default=5, help='max number of connections to the database')
     parser.add_argument('--hosts', default='./hosts.yaml', help='path to host config file')
 
     parser.add_argument('--recheck-age', type=int, default=561600, help='min age for recheck in seconds')
@@ -136,7 +137,7 @@ def parse_arguments() -> argparse.Namespace:
 async def main() -> None:
     options = parse_arguments()
 
-    async with aiopg.create_pool(options.dsn) as pgpool:
+    async with aiopg.create_pool(options.dsn, minsize=2, maxsize=max(2, options.max_db_connections)) as pgpool:
         await main_loop(options, pgpool)
 
 
