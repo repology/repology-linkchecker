@@ -16,39 +16,31 @@
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-from typing import Iterable
+from typing import Iterable, List
 
 from linkchecker.processor import UrlProcessor
 
 
 class DispatchingUrlProcessor(UrlProcessor):
-    _dummy_processor: UrlProcessor
-    _http_processor: UrlProcessor
-    _blacklisted_processor: UrlProcessor
+    _processors: List[UrlProcessor]
 
-    def __init__(self, dummy_processor: UrlProcessor, http_processor: UrlProcessor, blacklisted_processor: UrlProcessor) -> None:
-        self._dummy_processor = dummy_processor
-        self._http_processor = http_processor
-        self._blacklisted_processor = blacklisted_processor
+    def __init__(self, *processors: UrlProcessor) -> None:
+        self._processors = list(processors)
 
     def taste(self, url: str) -> bool:
         return True  # pragma: no cover
 
     async def process_urls(self, urls: Iterable[str]) -> None:
-        http_urls = []
-        unsupported_urls = []
-        blacklisted_urls = []
+        urls_for_processor: List[List[str]] = [[] for p in self._processors]
 
         for url in urls:
-            if self._blacklisted_processor.taste(url):
-                blacklisted_urls.append(url)
-            elif self._http_processor.taste(url):
-                http_urls.append(url)
+            for processor, queue in zip(self._processors, urls_for_processor):
+                if processor.taste(url):
+                    queue.append(url)
+                    break
             else:
-                unsupported_urls.append(url)
+                raise RuntimeError('Cannot find processor for URL {}'.format(url))
 
-        await asyncio.gather(
-            self._dummy_processor.process_urls(unsupported_urls),
-            self._http_processor.process_urls(http_urls),
-            self._blacklisted_processor.process_urls(blacklisted_urls)
-        )
+        for processor, queue in zip(self._processors, urls_for_processor):
+            if queue:
+                await processor.process_urls(queue)
