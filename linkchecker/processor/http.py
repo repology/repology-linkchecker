@@ -36,6 +36,10 @@ import yarl
 USER_AGENT = 'repology-linkchecker/1 (+{}/bots)'.format('https://repology.org')
 
 
+def _is_http_code_success(code: int) -> bool:
+    return code >= 200 and code < 300
+
+
 class HttpUrlProcessor(UrlProcessor):
     _url_updater: UrlUpdater
     _delay_manager: DelayManager
@@ -58,7 +62,7 @@ class HttpUrlProcessor(UrlProcessor):
             else:
                 break
 
-        return UrlStatus(response.status == 200, response.status, redirect_target)
+        return UrlStatus(_is_http_code_success(response.status), response.status, redirect_target)
 
     async def _check_url(self, url: str, session: aiohttp.ClientSession) -> UrlStatus:
         delay = self._delay_manager.get_delay(url)
@@ -67,7 +71,7 @@ class HttpUrlProcessor(UrlProcessor):
 
         try:
             async with session.head(url, allow_redirects=True) as response:
-                if response.status == 200:
+                if _is_http_code_success(response.status):
                     return await self._process_response(url, response)
 
             # if status != 200, fallback to get
