@@ -10,6 +10,9 @@ matrix:
       env: COVERAGE=yes
     - python: 3.8-dev
     - python: nightly
+  allow_failures:  # mypy incompatibility
+    - python: 3.8-dev
+    - python: nightly
 before_script:
   - sudo -u postgres psql < ci/create_database.sql
 before_install:
