@@ -82,3 +82,16 @@ async def update_url_status(
                     'ipv6_permanent_redirect_target': ipv6_status.permanent_redirect_target if ipv6_status is not None else None,
                 }
             )
+
+
+async def update_statistics(pool: aiopg.Pool, num_urls_checked: int) -> None:
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                UPDATE statistics SET num_urls_checked = num_urls_checked + %(num_urls_checked)s
+                """,
+                {
+                    'num_urls_checked': num_urls_checked,
+                }
+            )

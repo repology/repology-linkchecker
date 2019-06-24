@@ -21,7 +21,7 @@ from typing import Optional
 
 import aiopg
 
-from linkchecker.queries import update_url_status
+from linkchecker.queries import update_statistics, update_url_status
 from linkchecker.status import UrlStatus
 
 
@@ -39,3 +39,4 @@ class UrlUpdater:
         check_time = datetime.datetime.now()
         next_check_time = check_time + self._recheck_age + self._recheck_jitter * random.random()
         await update_url_status(self._pgpool, url, check_time, next_check_time, ipv4_status, ipv6_status)
+        await update_statistics(self._pgpool, 1)
