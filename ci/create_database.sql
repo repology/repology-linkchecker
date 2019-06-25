@@ -33,3 +33,9 @@ INSERT INTO links(url) VALUES
 	('https://repology.org/nonexistent'),  -- nonexistent path (404)
 	('https://./'),                        -- bad url
 	('https://mepis.org/foo');             -- blacklisted url
+
+CREATE TABLE statistics (
+	num_urls_checked integer NOT NULL DEFAULT 0
+);
+
+INSERT INTO statistics VALUES(DEFAULT);
