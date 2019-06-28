@@ -33,3 +33,6 @@ opentnl.org: { blacklist: true }
 
 # overtaken by some japanese health company
 ofset.org: { blacklist: true }
+
+# overtaken
+konst.org.ua: { blacklist: true }
