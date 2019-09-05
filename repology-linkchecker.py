@@ -52,8 +52,8 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
 
     updater = UrlUpdater(
         pgpool,
-        datetime.timedelta(seconds=options.recheck_age),
-        datetime.timedelta(seconds=options.recheck_jitter)
+        datetime.timedelta(seconds=options.recheck_period_min),
+        datetime.timedelta(seconds=options.recheck_period_max)
     )
 
     dummy_processor = DummyUrlProcessor(updater)
@@ -121,8 +121,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--max-db-connections', default=5, help='max number of connections to the database')
     parser.add_argument('--hosts', default='./hosts.yaml', help='path to host config file')
 
-    parser.add_argument('--recheck-age', type=int, default=561600, help='min age for recheck in seconds')
-    parser.add_argument('--recheck-jitter', type=int, default=86400, help='jitter time to smooth recheck rate')
+    parser.add_argument('--recheck-period-min', type=int, default=86400 * 6, help='min recheck period in seconds')
+    parser.add_argument('--recheck-period-max', type=int, default=86400 * 8, help='max recheck period in seconds')
     parser.add_argument('--delay', type=float, default=3.0, help='delay between requests to the same host')
     parser.add_argument('--timeout', type=int, default=60, help='timeout for each check')
 

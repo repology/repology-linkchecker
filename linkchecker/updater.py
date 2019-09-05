@@ -27,16 +27,16 @@ from linkchecker.status import UrlStatus
 
 class UrlUpdater:
     _pgpool: aiopg.Pool
-    _recheck_age: datetime.timedelta
-    _recheck_jitter: datetime.timedelta
+    _recheck_period_min: datetime.timedelta
+    _recheck_period_max: datetime.timedelta
 
-    def __init__(self, pgpool: aiopg.Pool, recheck_age: datetime.timedelta, recheck_jitter: datetime.timedelta) -> None:
+    def __init__(self, pgpool: aiopg.Pool, recheck_period_min: datetime.timedelta, recheck_period_max: datetime.timedelta) -> None:
         self._pgpool = pgpool
-        self._recheck_age = recheck_age
-        self._recheck_jitter = recheck_jitter
+        self._recheck_period_min = recheck_period_min
+        self._recheck_period_max = recheck_period_max
 
     async def update(self, url: str, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus]) -> None:
         check_time = datetime.datetime.now()
-        next_check_time = check_time + self._recheck_age + self._recheck_jitter * random.random()
+        next_check_time = check_time + self._recheck_period_min + (self._recheck_period_max - self._recheck_period_min) * random.random()
         await update_url_status(self._pgpool, url, check_time, next_check_time, ipv4_status, ipv6_status)
         await update_statistics(self._pgpool, 1)
