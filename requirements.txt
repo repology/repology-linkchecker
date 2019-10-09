@@ -1,0 +1,5 @@
+PyYAML>=5.1
+aiodns>=1.1.1
+aiohttp>=3.5.4
+aiopg>=0.16.0
+voluptuous

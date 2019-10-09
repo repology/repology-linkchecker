@@ -13,23 +13,11 @@ matrix:
   allow_failures:  # mypy, coverage incompatibility
     - python: 3.8-dev
     - python: nightly
+before_install:
+  - pip install coveralls
+  - pip install -r requirements-dev.txt
 before_script:
   - sudo -u postgres psql < ci/create_database.sql
-before_install:
-  # depends
-  - pip install PyYAML
-  - pip install aiodns
-  - pip install aiohttp
-  - pip install aiopg
-  - pip install voluptuous
-
-  # test depends
-  - pip install coveralls
-  - pip install mypy!=0.710,!=0.711  # incompatibility with aiohttp, see https://github.com/aio-libs/aiohttp/issues/3868
-  - pip install flake8
-  - pip install flake8-builtins!=1.1.0
-  - pip install flake8-import-order
-  - pip install flake8-quotes
 script:
   - make flake8
   - make mypy

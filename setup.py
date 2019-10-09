@@ -3,6 +3,11 @@
 from setuptools import setup
 
 
+def read_requirements(filename):
+    with open(filename, 'r') as f:
+        return [line for line in f.readlines() if not line.startswith('-')]
+
+
 setup(
     name='repology-linkchecker',
     version='0.0.0',
@@ -31,10 +36,5 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     python_requires=">=3.7",
-    install_requires=[
-        'PyYAML>=5.1',
-        'aiodns>=1.1.1',
-        'aiohttp>=3.5.4',
-        'aiopg>=0.16.0',
-    ]
+    install_requires=read_requirements('requirements.txt')
 )
