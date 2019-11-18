@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
+import asyncio
 import concurrent
 import errno
 import socket
@@ -54,7 +55,10 @@ def _print_exception_info(e: BaseException, level: int = 0) -> None:
 
 def _classify_exception(e: BaseException) -> Optional[int]:
     if isinstance(e, concurrent.futures.TimeoutError):
-        return ExtendedStatusCodes.TIMEOUT
+        return ExtendedStatusCodes.TIMEOUT  # timeouts in python <= 3.7
+
+    if isinstance(e, asyncio.TimeoutError):
+        return ExtendedStatusCodes.TIMEOUT  # timeouts in pytnon >= 3.8
 
     if isinstance(e, aiohttp.client_exceptions.TooManyRedirects):
         return ExtendedStatusCodes.TOO_MANY_REDIRECTS
