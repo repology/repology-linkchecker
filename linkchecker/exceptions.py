@@ -128,8 +128,9 @@ def _classify_exception(e: BaseException) -> Optional[int]:
         return ExtendedStatusCodes.CONNECTION_ABORTED
 
     if isinstance(e, OSError) and e.errno == errno.EINVAL:
-        # x42-plugins.com on IP ::ffff:85.214.110.134
-        return ExtendedStatusCodes.UNKNOWN_ERROR
+        # XXX: the exception is generic, but the only real world case
+        # for this is IPv4-mapped (::ffff:0:0/96) in AAAA
+        return ExtendedStatusCodes.DNS_IPV4_MAPPED_IN_AAAA
 
     if isinstance(e, aiohttp.http_exceptions.BadHttpMessage):
         return ExtendedStatusCodes.BAD_HTTP
