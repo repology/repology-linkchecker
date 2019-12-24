@@ -44,11 +44,13 @@ class HttpUrlProcessor(UrlProcessor):
     _url_updater: UrlUpdater
     _delay_manager: DelayManager
     _timeout: float
+    _skip_ipv6: bool
 
-    def __init__(self, url_updater: UrlUpdater, delay_manager: DelayManager, timeout: float) -> None:
+    def __init__(self, url_updater: UrlUpdater, delay_manager: DelayManager, timeout: float, skip_ipv6: bool = True) -> None:
         self._url_updater = url_updater
         self._delay_manager = delay_manager
         self._timeout = timeout
+        self._skip_ipv6 = skip_ipv6
 
     def taste(self, url: str) -> bool:
         return url.startswith('http://') or url.startswith('https://')
@@ -113,7 +115,9 @@ class HttpUrlProcessor(UrlProcessor):
                     else:
                         status4 = await self._check_url(url, session4)
 
-                    if dns.ipv6.exception is not None:
+                    if self._skip_ipv6:
+                        status6 = None
+                    elif dns.ipv6.exception is not None:
                         status6 = UrlStatus(False, classify_exception(dns.ipv6.exception, url))
                     else:
                         status6 = await self._check_url(url, session6)

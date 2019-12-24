@@ -63,9 +63,9 @@ async def update_url_status(
 
                     ipv6_last_success = CASE WHEN     %(ipv6_success)s THEN %(check_time)s ELSE ipv6_last_success END,
                     ipv6_last_failure = CASE WHEN NOT %(ipv6_success)s THEN %(check_time)s ELSE ipv6_last_failure END,
-                    ipv6_success = %(ipv6_success)s,
-                    ipv6_status_code = %(ipv6_status_code)s,
-                    ipv6_permanent_redirect_target = %(ipv6_permanent_redirect_target)s
+                    ipv6_success = COALESCE(%(ipv6_success)s, ipv6_success),
+                    ipv6_status_code = COALESCE(%(ipv6_status_code)s, ipv6_status_code),
+                    ipv6_permanent_redirect_target = COALESCE(%(ipv6_permanent_redirect_target)s, ipv6_permanent_redirect_target)
                 WHERE url = %(url)s
                 """,
                 {

@@ -57,7 +57,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     )
 
     dummy_processor = DummyUrlProcessor(updater)
-    http_processor = HttpUrlProcessor(updater, delay_manager, options.timeout)
+    http_processor = HttpUrlProcessor(updater, delay_manager, options.timeout, options.skip_ipv6)
     blacklisted_processor = BlacklistedUrlProcessor(updater, host_manager)
 
     dispatcher = DispatchingUrlProcessor(
@@ -130,6 +130,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--max-host-queue', type=int, default=100, help='maximum depth of per-host url queue')
 
     parser.add_argument('--single-run', action='store_true', help='exit after single run')
+    parser.add_argument('--skip-ipv6', action='store_true', help='skip IPv6 checks')
 
     return parser.parse_args()
 
