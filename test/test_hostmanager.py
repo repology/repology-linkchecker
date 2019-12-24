@@ -57,7 +57,6 @@ class TestHostManager(unittest.TestCase):
         self.assertEqual(hm.get_hostkey('http://sf.net/foo'), 'sf.net')
         self.assertEqual(hm.get_hostkey('http://project.sf.net/foo'), 'sf.net')
         self.assertEqual(hm.get_hostkey(''), '')
-        self.assertEqual(hm.get_hostkey('http://.'), '')
         self.assertEqual(hm.get_hostkey('http://.:.:`\\.:.'), '')
 
 
