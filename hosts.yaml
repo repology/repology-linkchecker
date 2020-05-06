@@ -8,6 +8,7 @@ npmjs.com: { delay: 10 }
 npmjs.org: { delay: 10 }
 sf.net: { aggregate: true }
 sourceforge.net: { aggregate: true }
+dev.gentoo.org: { delay: 1 }
 
 #
 # blacklist
