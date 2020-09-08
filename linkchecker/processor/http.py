@@ -17,8 +17,9 @@
 
 import asyncio
 import socket
+import ssl
 from concurrent.futures import CancelledError
-from typing import Iterable
+from typing import Iterable, Optional
 from urllib.parse import urljoin
 
 import aiohttp
@@ -45,12 +46,14 @@ class HttpUrlProcessor(UrlProcessor):
     _delay_manager: DelayManager
     _timeout: float
     _skip_ipv6: bool
+    _ssl_context: Optional[ssl.SSLContext]
 
-    def __init__(self, url_updater: UrlUpdater, delay_manager: DelayManager, timeout: float, skip_ipv6: bool = True) -> None:
+    def __init__(self, url_updater: UrlUpdater, delay_manager: DelayManager, timeout: float, skip_ipv6: bool = True, strict_ssl: bool = False) -> None:
         self._url_updater = url_updater
         self._delay_manager = delay_manager
         self._timeout = timeout
         self._skip_ipv6 = skip_ipv6
+        self._ssl_context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLSv1_2) if strict_ssl else None
 
     def taste(self, url: str) -> bool:
         return url.startswith('http://') or url.startswith('https://')
@@ -72,7 +75,7 @@ class HttpUrlProcessor(UrlProcessor):
         await asyncio.sleep(delay)
 
         try:
-            async with session.head(url, allow_redirects=True) as response:
+            async with session.head(url, allow_redirects=True, ssl=self._ssl_context) as response:
                 if _is_http_code_success(response.status):
                     return await self._process_response(url, response)
 
