@@ -1,14 +1,14 @@
 language: python
-dist: xenial
+dist: focal
 sudo: required
 cache: pip
 services:
   - postgresql
 matrix:
   include:
-    - python: 3.7
-      env: COVERAGE=yes
     - python: 3.8
+      env: COVERAGE=yes
+    - python: 3.9-dev
     - python: nightly
   allow_failures:
     - python: nightly
