@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019-2020 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -28,9 +28,9 @@ async def iterate_urls_to_recheck(pool: aiopg.Pool) -> AsyncIterator[str]:
         async with conn.cursor() as cur:
             await cur.execute(
                 """
-                SELECT url
-                FROM links
-                WHERE next_check < now()
+                SELECT url FROM links WHERE last_checked IS NULL
+                UNION ALL
+                SELECT url FROM links WHERE last_checked IS NOT NULL AND next_check < now()
                 """
             )
 
