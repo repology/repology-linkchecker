@@ -10,6 +10,7 @@ sf.net: { aggregate: true }
 sourceforge.net: { aggregate: true }
 dev.gentoo.org: { delay: 1 }
 files.pythonhosted.org: { delay: 1 }
+dev.exherbo.org: { delay: 1 }
 
 #
 # blacklist
