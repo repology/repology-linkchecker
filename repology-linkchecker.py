@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (C) 2019 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019-2021 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -19,15 +19,13 @@
 
 import argparse
 import asyncio
-import datetime
 import signal
 import sys
 from typing import Any
 
 import aiopg
 
-from linkchecker.delay import DelayManager
-from linkchecker.hostmanager import HostManager
+from linkchecker.hostmanager import DefaultHostSettings, HostManager
 from linkchecker.processor.blacklisted import BlacklistedUrlProcessor
 from linkchecker.processor.dispatching import DispatchingUrlProcessor
 from linkchecker.processor.dummy import DummyUrlProcessor
@@ -46,18 +44,18 @@ except ImportError:
 
 async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     with open(options.hosts, 'r') as config_file:
-        host_manager = HostManager(config_file)
+        host_manager = HostManager(
+            config_file,
+            DefaultHostSettings(
+                delay=options.delay,
+                recheck=options.recheck
+            )
+        )
 
-    delay_manager = DelayManager(options.delay, host_manager)
-
-    updater = UrlUpdater(
-        pgpool,
-        datetime.timedelta(seconds=options.recheck_period_min),
-        datetime.timedelta(seconds=options.recheck_period_max)
-    )
+    updater = UrlUpdater(pgpool, host_manager)
 
     dummy_processor = DummyUrlProcessor(updater)
-    http_processor = HttpUrlProcessor(updater, delay_manager, options.timeout, options.skip_ipv6, options.strict_ssl)
+    http_processor = HttpUrlProcessor(updater, host_manager, options.timeout, options.skip_ipv6, options.strict_ssl)
     blacklisted_processor = BlacklistedUrlProcessor(updater, host_manager)
 
     dispatcher = DispatchingUrlProcessor(
@@ -121,9 +119,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--max-db-connections', default=5, help='max number of connections to the database')
     parser.add_argument('--hosts', default='./hosts.yaml', help='path to host config file')
 
-    parser.add_argument('--recheck-period-min', type=int, default=86400 * 6, help='min recheck period in seconds')
-    parser.add_argument('--recheck-period-max', type=int, default=86400 * 8, help='max recheck period in seconds')
     parser.add_argument('--delay', type=float, default=3.0, help='delay between requests to the same host')
+    parser.add_argument('--recheck', type=str, default='6d-8d', help='min recheck period in seconds')
     parser.add_argument('--timeout', type=int, default=60, help='timeout for each check')
 
     parser.add_argument('--max-workers', type=int, default=100, help='maximum number of parallel workers')

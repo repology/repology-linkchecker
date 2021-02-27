@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019-2021 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -24,8 +24,8 @@ from urllib.parse import urljoin
 
 import aiohttp
 
-from linkchecker.delay import DelayManager
 from linkchecker.exceptions import classify_exception
+from linkchecker.hostmanager import HostManager
 from linkchecker.processor import UrlProcessor
 from linkchecker.resolver import PrecachedAsyncResolver
 from linkchecker.status import ExtendedStatusCodes, UrlStatus
@@ -43,14 +43,14 @@ def _is_http_code_success(code: int) -> bool:
 
 class HttpUrlProcessor(UrlProcessor):
     _url_updater: UrlUpdater
-    _delay_manager: DelayManager
+    _host_manager: HostManager
     _timeout: float
     _skip_ipv6: bool
     _ssl_context: Optional[ssl.SSLContext]
 
-    def __init__(self, url_updater: UrlUpdater, delay_manager: DelayManager, timeout: float, skip_ipv6: bool = True, strict_ssl: bool = False) -> None:
+    def __init__(self, url_updater: UrlUpdater, host_manager: HostManager, timeout: float, skip_ipv6: bool = True, strict_ssl: bool = False) -> None:
         self._url_updater = url_updater
-        self._delay_manager = delay_manager
+        self._host_manager = host_manager
         self._timeout = timeout
         self._skip_ipv6 = skip_ipv6
         self._ssl_context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLSv1_2) if strict_ssl else None
@@ -70,7 +70,7 @@ class HttpUrlProcessor(UrlProcessor):
         return UrlStatus(_is_http_code_success(response.status), response.status, redirect_target)
 
     async def _check_url(self, url: str, session: aiohttp.ClientSession) -> UrlStatus:
-        delay = self._delay_manager.get_delay(url)
+        delay = self._host_manager.get_delay(url)
 
         await asyncio.sleep(delay)
 

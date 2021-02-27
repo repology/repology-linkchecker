@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019,2021 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -21,22 +21,24 @@ from typing import Optional
 
 import aiopg
 
+from linkchecker.hostmanager import HostManager
 from linkchecker.queries import update_statistics, update_url_status
 from linkchecker.status import UrlStatus
 
 
 class UrlUpdater:
     _pgpool: aiopg.Pool
-    _recheck_period_min: datetime.timedelta
-    _recheck_period_max: datetime.timedelta
+    _host_manager: HostManager
 
-    def __init__(self, pgpool: aiopg.Pool, recheck_period_min: datetime.timedelta, recheck_period_max: datetime.timedelta) -> None:
+    def __init__(self, pgpool: aiopg.Pool, host_manager: HostManager) -> None:
         self._pgpool = pgpool
-        self._recheck_period_min = recheck_period_min
-        self._recheck_period_max = recheck_period_max
+        self._host_manager = host_manager
 
     async def update(self, url: str, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus]) -> None:
+        recheck_min, recheck_max = self._host_manager.get_recheck(url)
+        recheck_seconds = recheck_min + (recheck_max - recheck_min) * random.random()
+
         check_time = datetime.datetime.now()
-        next_check_time = check_time + self._recheck_period_min + (self._recheck_period_max - self._recheck_period_min) * random.random()
+        next_check_time = datetime.datetime.now() + datetime.timedelta(seconds=recheck_seconds)
         await update_url_status(self._pgpool, url, check_time, next_check_time, ipv4_status, ipv6_status)
         await update_statistics(self._pgpool, 1)
