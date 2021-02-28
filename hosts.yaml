@@ -9,7 +9,7 @@ github.io: { delay: 1, aggregate: true }
 notabug.org: { delay: 60 }
 npmjs.com: { delay: 10 }
 npmjs.org: { delay: 10 }
-rubygems.org: { recheck: 13d-15d } # too many links, unlikely to disappear
+rubygems.org: { recheck: 14d-21d } # too many links, unlikely to disappear
 sf.net: { aggregate: true }
 sourceforge.net: { aggregate: true }
 
