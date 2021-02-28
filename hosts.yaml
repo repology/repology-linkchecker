@@ -10,6 +10,7 @@ github.io: { delay: 1, aggregate: true }
 notabug.org: { delay: 60 }
 npmjs.com: { delay: 10 }
 npmjs.org: { delay: 10 }
+pypi.org: { delay: 1 }
 rubygems.org: { recheck: 14d-21d } # too many links, but unlikely to change status
 search.cpan.org: { recheck: 14d-21d } # too many links, but unlikely to change status
 sf.net: { aggregate: true }
