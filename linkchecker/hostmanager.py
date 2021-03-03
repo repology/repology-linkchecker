@@ -44,21 +44,21 @@ def _parse_recheck(recheck: str) -> Tuple[int, int]:
 
 
 class DefaultHostSettings:
-    delay: int
+    delay: float
     recheck: Tuple[int, int]
 
-    def __init__(self, delay: int, recheck: str) -> None:
+    def __init__(self, delay: float, recheck: str) -> None:
         self.delay = delay
         self.recheck = _parse_recheck(recheck)
 
 
 class _HostSettings:
-    delay: Optional[int]
+    delay: Optional[float]
     recheck: Optional[Tuple[int, int]]
     blacklist: Optional[bool]
     aggregate: bool = False
 
-    def __init__(self, delay: Optional[int] = None, recheck: Optional[str] = None, blacklist: Optional[bool] = None, aggregate: bool = False) -> None:
+    def __init__(self, delay: Optional[float] = None, recheck: Optional[str] = None, blacklist: Optional[bool] = None, aggregate: bool = False) -> None:
         self.delay = delay
         self.recheck = _parse_recheck(recheck) if recheck is not None else None
         self.blacklist = blacklist
@@ -97,7 +97,7 @@ class HostManager:
                 str: {
                     'blacklist': bool,
                     'aggregate': bool,
-                    'delay': int,
+                    'delay': voluptuous.Any(float, int),
                     'recheck': str,
                 }
             })(config)
@@ -136,7 +136,7 @@ class HostManager:
             return host_settings.blacklist
         return False
 
-    def get_delay(self, url: str) -> int:
+    def get_delay(self, url: str) -> float:
         host_settings = self._gather(self._get_host_always(url))
         if host_settings is not None and host_settings.delay is not None:
             return host_settings.delay
