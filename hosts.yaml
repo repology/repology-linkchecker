@@ -14,7 +14,7 @@ notabug.org: { delay: 60 }
 npmjs.com: { delay: 10 }
 npmjs.org: { delay: 10 }
 pypi.org: { delay: 1, recheck: 14d-21d }
-rubygems.org: { recheck: 14d-21d }
+rubygems.org: { delay: 1, recheck: 14d-21d }
 search.cpan.org: { recheck: 14d-21d }
 sf.net: { aggregate: true }
 sourceforge.net: { aggregate: true }
