@@ -28,9 +28,18 @@ async def iterate_urls_to_recheck(pool: aiopg.Pool) -> AsyncIterator[str]:
         async with conn.cursor() as cur:
             await cur.execute(
                 """
-                SELECT url FROM links WHERE refcount > 0 AND last_checked IS NULL
-                UNION ALL
-                SELECT url FROM links WHERE refcount > 0 AND last_checked IS NOT NULL AND next_check < now()
+                WITH all_urls AS (
+                    SELECT
+                        url,
+                        row_number() OVER(PARTITION BY substring(url from '.*://([^/]*)')) AS num_for_host
+                    FROM links
+                    WHERE refcount > 0 AND next_check < now()
+                )
+                SELECT
+                    url
+                FROM all_urls
+                WHERE num_for_host <= 100
+                LIMIT 10000
                 """
             )
 
