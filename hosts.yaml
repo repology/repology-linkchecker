@@ -8,8 +8,9 @@ cpan.metacpan.org: { recheck: 14d-21d }
 dev.exherbo.org: { delay: 1 }
 dev.gentoo.org: { delay: 1 }
 files.pythonhosted.org: { delay: 1, recheck: 14d-21d }
-github.com: { delay: 1 }
+github.com: { delay: 1, recheck: 14d-21d } # XXX: need to differentiate package links and upstreams
 github.io: { delay: 1, aggregate: true }
+gitlab.com: { delay: 1, recheck: 14d-21d } # XXX: need to differentiate package links and upstreams
 notabug.org: { delay: 60 }
 npmjs.com: { delay: 10 }
 npmjs.org: { delay: 10 }
