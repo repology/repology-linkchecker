@@ -35,10 +35,12 @@ class UrlUpdater:
         self._host_manager = host_manager
 
     async def update(self, url: str, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus]) -> None:
-        recheck_min, recheck_max = self._host_manager.get_recheck(url)
+        (recheck_min, recheck_max), (priority_recheck_min, priority_recheck_max) = self._host_manager.get_rechecks(url)
         recheck_seconds = recheck_min + (recheck_max - recheck_min) * random.random()
+        priority_recheck_seconds = priority_recheck_min + (priority_recheck_max - priority_recheck_min) * random.random()
 
         check_time = datetime.datetime.now()
-        next_check_time = datetime.datetime.now() + datetime.timedelta(seconds=recheck_seconds)
-        await update_url_status(self._pgpool, url, check_time, next_check_time, ipv4_status, ipv6_status)
+        next_check_time = check_time + datetime.timedelta(seconds=recheck_seconds)
+        priority_next_check_time = check_time + datetime.timedelta(seconds=priority_recheck_seconds)
+        await update_url_status(self._pgpool, url, check_time, next_check_time, priority_next_check_time, ipv4_status, ipv6_status)
         await update_statistics(self._pgpool, 1)

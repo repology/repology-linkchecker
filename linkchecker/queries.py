@@ -43,6 +43,7 @@ async def update_url_status(
     url: str,
     check_time: datetime.datetime,
     next_check_time: datetime.datetime,
+    priority_next_check_time: datetime.datetime,
     ipv4_status: Optional[UrlStatus],
     ipv6_status: Optional[UrlStatus]
 ) -> None:
@@ -52,7 +53,7 @@ async def update_url_status(
                 """
                 UPDATE links
                 SET
-                    next_check = %(next_check_time)s,
+                    next_check = CASE WHEN priority THEN %(priority_next_check_time)s ELSE %(next_check_time)s END,
                     last_checked = %(check_time)s,
 
                     ipv4_last_success = CASE WHEN     %(ipv4_success)s THEN %(check_time)s ELSE ipv4_last_success END,
@@ -72,6 +73,7 @@ async def update_url_status(
                     'url': url,
                     'check_time': check_time,
                     'next_check_time': next_check_time,
+                    'priority_next_check_time': priority_next_check_time,
 
                     'ipv4_success': ipv4_status.success if ipv4_status is not None else None,
                     'ipv4_status_code': ipv4_status.status_code if ipv4_status is not None else None,

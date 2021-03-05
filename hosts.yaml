@@ -1,67 +1,69 @@
-#
-# per-host overrides
-#
+defaults:
+  delay: 3
+  priority_recheck: 6d-8d
+  recheck: 14d-21d
 
-# for module hosting facilities (rubygems, pypi, cpan) we set larger recheck time
-# since there are a lot of links, but the links are unlikely to change status
-cpan.metacpan.org: { recheck: 14d-21d }
-dev.exherbo.org: { delay: 1 }
-dev.gentoo.org: { delay: 1 }
-files.pythonhosted.org: { delay: 1, recheck: 14d-21d }
-github.com: { delay: 1, recheck: 14d-21d } # XXX: need to differentiate package links and upstreams
-github.io: { delay: 1, aggregate: true }
-gitlab.com: { delay: 1, recheck: 14d-21d } # XXX: need to differentiate package links and upstreams
-notabug.org: { delay: 60 }
-npmjs.com: { delay: 10 }
-npmjs.org: { delay: 10 }
-pypi.org: { delay: 1, recheck: 14d-21d }
-rubygems.org: { delay: 1, recheck: 14d-21d }
-search.cpan.org: { recheck: 14d-21d }
-sf.net: { aggregate: true }
-sourceforge.net: { aggregate: true }
+hosts:
+  # for module hosting facilities (rubygems, pypi, cpan) we set larger recheck time
+  # since there are a lot of links, but the links are unlikely to change status
+  cpan.metacpan.org: { priority_recheck: 14d-21d }
+  dev.exherbo.org: { delay: 1 }
+  dev.gentoo.org: { delay: 1 }
+  files.pythonhosted.org: { delay: 1, priority_recheck: 14d-21d }
+  github.com: { delay: 1 }
+  github.io: { delay: 1, aggregate: true }
+  gitlab.com: { delay: 1 }
+  notabug.org: { delay: 60 }
+  npmjs.com: { delay: 10 }
+  npmjs.org: { delay: 10 }
+  pypi.org: { delay: 1, priority_recheck: 14d-21d }
+  rubygems.org: { delay: 1, priority_recheck: 14d-21d }
+  search.cpan.org: { priority_recheck: 14d-21d }
+  sf.net: { aggregate: true }
+  sourceforge.net: { aggregate: true }
 
-#
-# blacklist
-#
+  #
+  # blacklist
+  #
 
-# redirects to https://www.bestsevenreviews.com/best-linux-distros/ garbage
-mepis.org: { blacklist: true }
+  # redirects to https://www.bestsevenreviews.com/best-linux-distros/ garbage
+  mepis.org: { blacklist: true }
 
-# overtaken over by some iPhone Photography Equipment crap
-qtoctave.wordpress.com: { blacklist: true }
+  # overtaken over by some iPhone Photography Equipment crap
+  qtoctave.wordpress.com: { blacklist: true }
 
-# domain for sale
-nimuh.com: { blacklist: true }
+  # domain for sale
+  nimuh.com: { blacklist: true }
 
-# overtaken by some game
-astroid.org: { blacklist: true }
+  # overtaken by some game
+  astroid.org: { blacklist: true }
 
-# overtaken by some french vpn "securify" garbage
-dejavu-fonts.org: { blacklist: true }
+  # overtaken by some french vpn "securify" garbage
+  dejavu-fonts.org: { blacklist: true }
 
-# overtaken by some japanese company
-opentnl.org: { blacklist: true }
+  # overtaken by some japanese company
+  opentnl.org: { blacklist: true }
 
-# overtaken by some japanese health company
-ofset.org: { blacklist: true }
+  # overtaken by some japanese health company
+  ofset.org: { blacklist: true }
 
-# overtaken
-konst.org.ua: { blacklist: true }
-thekonst.net: { blacklist: true }
-topfx.com: { blacklist: true }
-tkzinc.org: { blacklist: true }
-gnugadu.org: { blacklist: true }
-junoplay.com: { blacklist: true }
-conduit-project.org: { blacklist: true }
-cross-pcg.com: { blacklist: true }
-coolreader.org: { blacklist: true }
-opensync.org: { blacklist: true }
-wmii.de: { blacklist: true }
-libcapn.org: { blacklist: true }
-aseman.co: { blacklist: true }
-ferite.org: { blacklist: true }
-jnickelsen.de: { blacklist: true }
-htpc-forum.de: { blacklist: true }
-somethingaboutorange.com: { blacklist: true }
-ekg2.org: { blacklist: true }
-boutell.co.uk: { blacklist: true }
+  # overtaken
+  konst.org.ua: { blacklist: true }
+  thekonst.net: { blacklist: true }
+  topfx.com: { blacklist: true }
+  tkzinc.org: { blacklist: true }
+  gnugadu.org: { blacklist: true }
+  junoplay.com: { blacklist: true }
+  conduit-project.org: { blacklist: true }
+  cross-pcg.com: { blacklist: true }
+  coolreader.org: { blacklist: true }
+  opensync.org: { blacklist: true }
+  wmii.de: { blacklist: true }
+  libcapn.org: { blacklist: true }
+  aseman.co: { blacklist: true }
+  ferite.org: { blacklist: true }
+  jnickelsen.de: { blacklist: true }
+  htpc-forum.de: { blacklist: true }
+  somethingaboutorange.com: { blacklist: true }
+  ekg2.org: { blacklist: true }
+  boutell.co.uk: { blacklist: true }

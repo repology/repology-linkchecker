@@ -18,23 +18,19 @@
 import io
 import unittest
 
-from linkchecker.hostmanager import DefaultHostSettings, HostManager, _get_parent_host
+import yaml
+
+from linkchecker.hostmanager import HostManager, _get_parent_host
 
 
 class TestHostManager(unittest.TestCase):
     def test_config_loading(self):
-        defaults = DefaultHostSettings(delay=3, recheck='1d-2d')
-        HostManager(io.StringIO('example.com: {}'), defaults)
-        HostManager(io.StringIO('example.com: {blacklist: true}'), defaults)
-        HostManager(io.StringIO('example.com: {aggregate: true}'), defaults)
-        HostManager(io.StringIO('example.com: {delay: 10}'), defaults)
-        HostManager(io.StringIO('example.com: {recheck: 1d-2d}'), defaults)
-
-        with self.assertRaises(RuntimeError):
-            HostManager(io.StringIO('example.com: {foo: true}'), defaults)
-
-        with self.assertRaises(RuntimeError):
-            HostManager(io.StringIO('example.com: {delay: "str"}'), defaults)
+        defaults = 'defaults: {delay: 3, recheck: 1d-2d, priority_recheck: 1d-2d}\n'
+        HostManager(yaml.safe_load(defaults + 'hosts: {example.com: {}}'))
+        HostManager(yaml.safe_load(defaults + 'hosts: {example.com: {blacklist: true}}'))
+        HostManager(yaml.safe_load(defaults + 'hosts: {example.com: {aggregate: true}}'))
+        HostManager(yaml.safe_load(defaults + 'hosts: {example.com: {delay: 10}}'))
+        HostManager(yaml.safe_load(defaults + 'hosts: {example.com: {recheck: 1d-2d}}'))
 
     def test_get_parent_host(self):
         self.assertEqual(_get_parent_host('foo.bar.example.com'), 'bar.example.com')
@@ -43,43 +39,49 @@ class TestHostManager(unittest.TestCase):
         self.assertEqual(_get_parent_host('com'), None)
 
     def test_parse_recheck(self):
-        defaults = DefaultHostSettings(delay=5, recheck='1-2')
         hm = HostManager(
-            io.StringIO(
-                'second.com: {recheck: 1-2}\n'
-                'minute.com: {recheck: 1m-2m}\n'
-                'hour.com: {recheck: 1h-2h}\n'
-                'day.com: {recheck: 1d-2d}\n'
-                'week.com: {recheck: 1w-2w}\n'
-            ),
-            defaults
+            yaml.safe_load(
+            """
+                defaults: {delay: 5, recheck: 1-2, priority_recheck: 1-2}
+                hosts:
+                  second.com: {recheck: 1-2, priority_recheck: 1-2}
+                  minute.com: {recheck: 1m-2m, priority_recheck: 1m-2m}
+                  hour.com: {recheck: 1h-2h, priority_recheck: 1h-2h}
+                  day.com: {recheck: 1d-2d, priority_recheck: 1d-2d}
+                  week.com: {recheck: 1w-2w, priority_recheck: 1w-2w}
+            """
+            )
         )
 
         p = 1
-        self.assertEqual(hm.get_recheck('http://second.com/foo'), (p, p * 2))
+        self.assertEqual(hm.get_rechecks('http://second.com/foo'), ((p, p * 2), (p, p * 2)))
         p *= 60
-        self.assertEqual(hm.get_recheck('http://minute.com/foo'), (p, p * 2))
+        self.assertEqual(hm.get_rechecks('http://minute.com/foo'), ((p, p * 2), (p, p * 2)))
         p *= 60
-        self.assertEqual(hm.get_recheck('http://hour.com/foo'), (p, p * 2))
+        self.assertEqual(hm.get_rechecks('http://hour.com/foo'), ((p, p * 2), (p, p * 2)))
         p *= 24
-        self.assertEqual(hm.get_recheck('http://day.com/foo'), (p, p * 2))
+        self.assertEqual(hm.get_rechecks('http://day.com/foo'), ((p, p * 2), (p, p * 2)))
         p *= 7
-        self.assertEqual(hm.get_recheck('http://week.com/foo'), (p, p * 2))
+        self.assertEqual(hm.get_rechecks('http://week.com/foo'), ((p, p * 2), (p, p * 2)))
 
     def test_host_flags(self):
-        defaults = DefaultHostSettings(delay=5, recheck='1-2')
         hm = HostManager(
-            io.StringIO(
-                'delay.com: {delay: 10}\n'
-                'redefined.delay.com: {delay: 20}\n'
+            yaml.safe_load("""
+                defaults: {delay: 5, recheck: 1-2, priority_recheck: 1-2}
+                
+                hosts:
+                  delay.com: {delay: 10}
+                  redefined.delay.com: {delay: 20}
 
-                'recheck.com: {recheck: 2-3}\n'
-                'redefined.recheck.com: {recheck: 3-4}\n'
+                  recheck.com: {recheck: 2-3}
+                  redefined.recheck.com: {recheck: 3-4}
 
-                'blacklist.com: {blacklist: true}\n'
-                'redefined.blacklist.com: {blacklist: false}\n'
-            ),
-            defaults
+                  priorityrecheck.com: {priority_recheck: 2-3}
+                  redefined.priorityrecheck.com: {priority_recheck: 3-4}
+
+                  blacklist.com: {blacklist: true}
+                  redefined.blacklist.com: {blacklist: false}
+            """)
         )
 
         self.assertEqual(hm.get_delay('http://delay.com/foo'), 10)
@@ -88,11 +90,17 @@ class TestHostManager(unittest.TestCase):
         self.assertEqual(hm.get_delay('http://child.redefined.delay.com/foo'), 20)
         self.assertEqual(hm.get_delay('http://other.com/foo'), 5)
 
-        self.assertEqual(hm.get_recheck('http://recheck.com/foo'), (2,3))
-        self.assertEqual(hm.get_recheck('http://redefined.recheck.com/foo'), (3,4))
-        self.assertEqual(hm.get_recheck('http://child.recheck.com/foo'), (2,3))
-        self.assertEqual(hm.get_recheck('http://child.redefined.recheck.com/foo'), (3,4))
-        self.assertEqual(hm.get_recheck('http://other.com/foo'), (1,2))
+        self.assertEqual(hm.get_rechecks('http://recheck.com/foo'), ((2, 3), (1, 2)))
+        self.assertEqual(hm.get_rechecks('http://redefined.recheck.com/foo'), ((3, 4), (1, 2)))
+        self.assertEqual(hm.get_rechecks('http://child.recheck.com/foo'), ((2, 3), (1, 2)))
+        self.assertEqual(hm.get_rechecks('http://child.redefined.recheck.com/foo'), ((3, 4), (1, 2)))
+        self.assertEqual(hm.get_rechecks('http://other.com/foo'), ((1, 2), (1, 2)))
+
+        self.assertEqual(hm.get_rechecks('http://priorityrecheck.com/foo'), ((1, 2), (2, 3)))
+        self.assertEqual(hm.get_rechecks('http://redefined.priorityrecheck.com/foo'), ((1, 2), (3, 4)))
+        self.assertEqual(hm.get_rechecks('http://child.priorityrecheck.com/foo'), ((1, 2), (2, 3)))
+        self.assertEqual(hm.get_rechecks('http://child.redefined.priorityrecheck.com/foo'), ((1, 2), (3, 4)))
+        self.assertEqual(hm.get_rechecks('http://other.com/foo'), ((1, 2), (1, 2)))
 
         self.assertEqual(hm.is_blacklisted('http://blacklist.com/foo'), True)
         self.assertEqual(hm.is_blacklisted('http://redefined.blacklist.com/foo'), False)
@@ -102,8 +110,7 @@ class TestHostManager(unittest.TestCase):
 
 
     def test_hostkey(self):
-        defaults = DefaultHostSettings(delay=5, recheck='1d-2d')
-        hm = HostManager(io.StringIO('sf.net: {aggregate: true}'), defaults)
+        hm = HostManager(yaml.safe_load('defaults: {delay: 5, recheck: 1d-2d, priority_recheck: 1d-2d}\nhosts: {sf.net: {aggregate: true}}'))
 
         self.assertEqual(hm.get_hostkey('http://example.com/foo'), 'example.com')
         self.assertEqual(hm.get_hostkey('http://www.example.com/foo'), 'example.com')

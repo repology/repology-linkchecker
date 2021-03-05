@@ -16,11 +16,7 @@
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
-from typing import Dict, IO, List, Optional, Tuple
-
-import voluptuous
-
-import yaml
+from typing import Any, Dict, List, Optional, Tuple
 
 import yarl
 
@@ -43,24 +39,28 @@ def _parse_recheck(recheck: str) -> Tuple[int, int]:
     return recheck_min, recheck_max
 
 
-class DefaultHostSettings:
+class _DefaultHostSettings:
     delay: float
     recheck: Tuple[int, int]
+    priority_recheck: Tuple[int, int]
 
-    def __init__(self, delay: float, recheck: str) -> None:
+    def __init__(self, delay: float, recheck: str, priority_recheck: str) -> None:
         self.delay = delay
         self.recheck = _parse_recheck(recheck)
+        self.priority_recheck = _parse_recheck(priority_recheck)
 
 
 class _HostSettings:
     delay: Optional[float]
     recheck: Optional[Tuple[int, int]]
+    priority_recheck: Optional[Tuple[int, int]]
     blacklist: Optional[bool]
     aggregate: bool = False
 
-    def __init__(self, delay: Optional[float] = None, recheck: Optional[str] = None, blacklist: Optional[bool] = None, aggregate: bool = False) -> None:
+    def __init__(self, delay: Optional[float] = None, recheck: Optional[str] = None, priority_recheck: Optional[str] = None, blacklist: Optional[bool] = None, aggregate: bool = False) -> None:
         self.delay = delay
         self.recheck = _parse_recheck(recheck) if recheck is not None else None
+        self.priority_recheck = _parse_recheck(priority_recheck) if priority_recheck is not None else None
         self.blacklist = blacklist
         self.aggregate = aggregate
 
@@ -69,6 +69,8 @@ class _HostSettings:
             self.delay = other.delay
         if other.recheck is not None:
             self.recheck = other.recheck
+        if other.priority_recheck is not None:
+            self.priority_recheck = other.priority_recheck
         if other.blacklist is not None:
             self.blacklist = other.blacklist
         if other.aggregate:
@@ -84,26 +86,11 @@ def _get_parent_host(host: str) -> Optional[str]:
 
 class HostManager:
     _host_settings: Dict[str, _HostSettings]
-    _defaults: DefaultHostSettings
+    _defaults: _DefaultHostSettings
 
-    def __init__(self, config_fd: IO[str], defaults: DefaultHostSettings) -> None:
-        self._host_settings = self._load_config(config_fd)
-        self._defaults = defaults
-
-    def _load_config(self, fd: IO[str]) -> Dict[str, _HostSettings]:
-        try:
-            config = yaml.safe_load(fd)
-            voluptuous.Schema({
-                str: {
-                    'blacklist': bool,
-                    'aggregate': bool,
-                    'delay': voluptuous.Any(float, int),
-                    'recheck': str,
-                }
-            })(config)
-            return {k: _HostSettings(**v) for k, v in config.items()}
-        except voluptuous.error.MultipleInvalid as e:
-            raise RuntimeError('error parsing hosts config: ' + str(e))
+    def __init__(self, config: Dict[str, Any]) -> None:
+        self._defaults = _DefaultHostSettings(**config['defaults'])
+        self._host_settings = {k: _HostSettings(**v) for k, v in config['hosts'].items()}
 
     def _gather(self, host: str) -> Optional[_HostSettings]:
         currenthost: Optional[str] = host
@@ -142,11 +129,13 @@ class HostManager:
             return host_settings.delay
         return self._defaults.delay
 
-    def get_recheck(self, url: str) -> Tuple[int, int]:
+    def get_rechecks(self, url: str) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         host_settings = self._gather(self._get_host_always(url))
-        if host_settings is not None and host_settings.recheck is not None:
-            return host_settings.recheck
-        return self._defaults.recheck
+
+        recheck = host_settings.recheck if host_settings is not None and host_settings.recheck is not None else self._defaults.recheck
+        priority_recheck = host_settings.priority_recheck if host_settings is not None and host_settings.priority_recheck is not None else self._defaults.priority_recheck
+
+        return recheck, priority_recheck
 
     def get_hostkey(self, url: str) -> str:
         key = self._get_host_always(url).removeprefix('www.')
