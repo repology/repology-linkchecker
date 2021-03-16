@@ -22,7 +22,7 @@ hosts:
   sf.net: { aggregate: true }
   sourceforge.net: { aggregate: true }
   buildd.debian.org: { delay: 60 }
-  crates.io: { skip: true } # misconfigured crap, always 404
+  crates.io: { skip: true } # misconfigured crap, always 404; XXX: this is true only for crate pages, not for e.g. https://crates.io/api/v1/crates/abscissa_core/0.5.2/download
   svnweb.freebsd.org: { skip: true } # misconfigured crap, always 403
 
   #
