@@ -22,6 +22,8 @@ hosts:
   sf.net: { aggregate: true }
   sourceforge.net: { aggregate: true }
   buildd.debian.org: { delay: 60 }
+  crates.io: { skip: true } # misconfigured crap, always 404
+  svnweb.freebsd.org: { skip: true } # misconfigured crap, always 403
 
   #
   # blacklist

@@ -16,9 +16,16 @@
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 import yarl
+
+
+class HostStatus(Enum):
+    OK = 0
+    BLACKLISTED = 1
+    SKIPPED = 2
 
 
 def _parse_recheck(recheck: str) -> Tuple[int, int]:
@@ -55,13 +62,15 @@ class _HostSettings:
     recheck: Optional[Tuple[int, int]]
     priority_recheck: Optional[Tuple[int, int]]
     blacklist: Optional[bool]
+    skip: Optional[bool]
     aggregate: bool = False
 
-    def __init__(self, delay: Optional[float] = None, recheck: Optional[str] = None, priority_recheck: Optional[str] = None, blacklist: Optional[bool] = None, aggregate: bool = False) -> None:
+    def __init__(self, delay: Optional[float] = None, recheck: Optional[str] = None, priority_recheck: Optional[str] = None, blacklist: Optional[bool] = None, skip: Optional[bool] = None, aggregate: bool = False) -> None:
         self.delay = delay
         self.recheck = _parse_recheck(recheck) if recheck is not None else None
         self.priority_recheck = _parse_recheck(priority_recheck) if priority_recheck is not None else None
         self.blacklist = blacklist
+        self.skip = skip
         self.aggregate = aggregate
 
     def update(self, other: '_HostSettings') -> None:
@@ -73,6 +82,8 @@ class _HostSettings:
             self.priority_recheck = other.priority_recheck
         if other.blacklist is not None:
             self.blacklist = other.blacklist
+        if other.skip is not None:
+            self.skip = other.skip
         if other.aggregate:
             self.aggregate = True
 
@@ -117,11 +128,15 @@ class HostManager:
         except (UnicodeError, ValueError):
             return ''
 
-    def is_blacklisted(self, url: str) -> bool:
+    def get_host_status(self, url: str) -> HostStatus:
         host_settings = self._gather(self._get_host_always(url))
-        if host_settings is not None and host_settings.blacklist is not None:
-            return host_settings.blacklist
-        return False
+
+        if host_settings is not None and host_settings.blacklist:
+            return HostStatus.BLACKLISTED
+        elif host_settings is not None and host_settings.skip:
+            return HostStatus.SKIPPED
+        else:
+            return HostStatus.OK
 
     def get_delay(self, url: str) -> float:
         host_settings = self._gather(self._get_host_always(url))

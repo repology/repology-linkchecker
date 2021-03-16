@@ -20,7 +20,7 @@ import unittest
 
 import yaml
 
-from linkchecker.hostmanager import HostManager, _get_parent_host
+from linkchecker.hostmanager import HostManager, HostStatus, _get_parent_host
 
 
 class TestHostManager(unittest.TestCase):
@@ -102,11 +102,11 @@ class TestHostManager(unittest.TestCase):
         self.assertEqual(hm.get_rechecks('http://child.redefined.priorityrecheck.com/foo'), ((1, 2), (3, 4)))
         self.assertEqual(hm.get_rechecks('http://other.com/foo'), ((1, 2), (1, 2)))
 
-        self.assertEqual(hm.is_blacklisted('http://blacklist.com/foo'), True)
-        self.assertEqual(hm.is_blacklisted('http://redefined.blacklist.com/foo'), False)
-        self.assertEqual(hm.is_blacklisted('http://child.blacklist.com/foo'), True)
-        self.assertEqual(hm.is_blacklisted('http://child.redefined.blacklist.com/foo'), False)
-        self.assertEqual(hm.is_blacklisted('http://other.com/foo'), False)
+        self.assertEqual(hm.get_host_status('http://blacklist.com/foo'), HostStatus.BLACKLISTED)
+        self.assertEqual(hm.get_host_status('http://redefined.blacklist.com/foo'), HostStatus.OK)
+        self.assertEqual(hm.get_host_status('http://child.blacklist.com/foo'), HostStatus.BLACKLISTED)
+        self.assertEqual(hm.get_host_status('http://child.redefined.blacklist.com/foo'), HostStatus.OK)
+        self.assertEqual(hm.get_host_status('http://other.com/foo'), HostStatus.OK)
 
 
     def test_hostkey(self):

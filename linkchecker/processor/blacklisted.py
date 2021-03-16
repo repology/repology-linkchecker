@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019,2021 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -17,7 +17,7 @@
 
 from typing import Iterable
 
-from linkchecker.hostmanager import HostManager
+from linkchecker.hostmanager import HostManager, HostStatus
 from linkchecker.processor import UrlProcessor
 from linkchecker.status import ExtendedStatusCodes, UrlStatus
 from linkchecker.updater import UrlUpdater
@@ -32,10 +32,14 @@ class BlacklistedUrlProcessor(UrlProcessor):
         self._host_manager = host_manager
 
     def taste(self, url: str) -> bool:
-        return self._host_manager.is_blacklisted(url)
+        return self._host_manager.get_host_status(url) != HostStatus.OK
 
     async def process_urls(self, urls: Iterable[str]) -> None:
-        status = UrlStatus(False, ExtendedStatusCodes.BLACKLISTED)
-
         for url in urls:
-            await self._url_updater.update(url, status, status)
+            host_status = self._host_manager.get_host_status(url)
+
+            if host_status == HostStatus.SKIPPED:
+                await self._url_updater.update(url, None, None)
+            elif host_status == HostStatus.BLACKLISTED:
+                status = UrlStatus(False, ExtendedStatusCodes.BLACKLISTED)
+                await self._url_updater.update(url, status, status)
