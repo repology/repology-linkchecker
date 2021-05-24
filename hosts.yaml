@@ -21,7 +21,7 @@ hosts:
   search.cpan.org: { priority_recheck: 14d-21d }
   sf.net: { aggregate: true }
   sourceforge.net: { aggregate: true }
-  buildd.debian.org: { delay: 60, recheck: 60d-90d } # sensitive to load
+  buildd.debian.org: { delay: 60, recheck: 300d-360d } # sensitive to load
   crates.io: { skip: true } # misconfigured crap, always 404; XXX: this is true only for crate pages, not for e.g. https://crates.io/api/v1/crates/abscissa_core/0.5.2/download
   svnweb.freebsd.org: { skip: true } # misconfigured crap, always 403
   src.fedoraproject.org: { recheck: 30d-60d } # very big
