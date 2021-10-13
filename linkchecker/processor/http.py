@@ -34,7 +34,7 @@ from linkchecker.updater import UrlUpdater
 import yarl
 
 
-USER_AGENT = 'repology-linkchecker/1 (+{}/bots)'.format('https://repology.org')
+USER_AGENT = 'repology-linkchecker/1 (+{}/docs/bots)'.format('https://repology.org')
 
 
 def _is_http_code_success(code: int) -> bool:
