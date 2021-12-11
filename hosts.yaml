@@ -72,3 +72,4 @@ hosts:
   somethingaboutorange.com: { blacklist: true }
   ekg2.org: { blacklist: true }
   boutell.co.uk: { blacklist: true }
+  kmldonkey.org: { blacklist: true }
