@@ -73,3 +73,5 @@ hosts:
   ekg2.org: { blacklist: true }
   boutell.co.uk: { blacklist: true }
   kmldonkey.org: { blacklist: true }
+  mandriva.com: { blacklist: true }
+  svn.mandriva.com: { blacklist: true }
