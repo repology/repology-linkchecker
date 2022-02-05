@@ -75,3 +75,4 @@ hosts:
   kmldonkey.org: { blacklist: true }
   mandriva.com: { blacklist: true }
   svn.mandriva.com: { blacklist: true }
+  yafray.org: { blacklist: true }
