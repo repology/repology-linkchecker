@@ -76,3 +76,4 @@ hosts:
   mandriva.com: { blacklist: true }
   svn.mandriva.com: { blacklist: true }
   yafray.org: { blacklist: true }
+  kermit-project.org: { blacklist: true }
