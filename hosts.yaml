@@ -53,28 +53,28 @@ hosts:
   ofset.org: { blacklist: true }
 
   # overtaken
-  konst.org.ua: { blacklist: true }
-  thekonst.net: { blacklist: true }
-  topfx.com: { blacklist: true }
-  tkzinc.org: { blacklist: true }
-  gnugadu.org: { blacklist: true }
-  junoplay.com: { blacklist: true }
-  conduit-project.org: { blacklist: true }
-  cross-pcg.com: { blacklist: true }
-  coolreader.org: { blacklist: true }
-  opensync.org: { blacklist: true }
-  wmii.de: { blacklist: true }
-  libcapn.org: { blacklist: true }
   aseman.co: { blacklist: true }
-  ferite.org: { blacklist: true }
-  jnickelsen.de: { blacklist: true }
-  htpc-forum.de: { blacklist: true }
-  somethingaboutorange.com: { blacklist: true }
-  ekg2.org: { blacklist: true }
   boutell.co.uk: { blacklist: true }
-  kmldonkey.org: { blacklist: true }
-  mandriva.com: { blacklist: true }
-  svn.mandriva.com: { blacklist: true }
-  yafray.org: { blacklist: true }
-  kermit-project.org: { blacklist: true }
+  conduit-project.org: { blacklist: true }
+  coolreader.org: { blacklist: true }
+  cross-pcg.com: { blacklist: true }
+  ekg2.org: { blacklist: true }
+  ferite.org: { blacklist: true }
+  gnugadu.org: { blacklist: true }
   htdig.org: { blacklist: true }
+  htpc-forum.de: { blacklist: true }
+  jnickelsen.de: { blacklist: true }
+  junoplay.com: { blacklist: true }
+  kermit-project.org: { blacklist: true }
+  kmldonkey.org: { blacklist: true }
+  konst.org.ua: { blacklist: true }
+  libcapn.org: { blacklist: true }
+  mandriva.com: { blacklist: true }
+  opensync.org: { blacklist: true }
+  somethingaboutorange.com: { blacklist: true }
+  svn.mandriva.com: { blacklist: true }
+  thekonst.net: { blacklist: true }
+  tkzinc.org: { blacklist: true }
+  topfx.com: { blacklist: true }
+  wmii.de: { blacklist: true }
+  yafray.org: { blacklist: true }
