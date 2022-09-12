@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (C) 2019-2021 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019-2022 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -21,6 +21,7 @@ import argparse
 import asyncio
 import signal
 import sys
+import time
 from typing import Any
 
 import aiopg
@@ -69,19 +70,21 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     )
 
     run_number = 0
+    run_start = 0.0
 
-    def print_statistics(*args: Any, status: str = 'in progress') -> None:
+    run_target_duration = 120.0
+
+    def print_statistics(*args: Any, finished: bool = False) -> None:
         stats = worker_pool.get_statistics()
 
+        duration = time.monotonic() - run_start
+
         print(
-            'Run #{} {}: {} url(s) scanned, {} submitted for processing, {} processed, {} worker(s) running'.format(
-                run_number,
-                status,
-                stats.scanned,
-                stats.submitted,
-                stats.processed,
-                stats.workers
-            ),
+            f'Run #{run_number} {"finished in" if finished else "running for"} {duration:.2f}: '
+            f'{stats.scanned} url(s) scanned, '
+            f'{stats.submitted} submitted for processing, '
+            f'{stats.processed} processed, '
+            f'{stats.workers} worker(s) running',
             file=sys.stderr
         )
 
@@ -90,19 +93,24 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
 
     while True:
         run_number += 1
+        run_start = time.monotonic()
         worker_pool.reset_statistics()
 
         # process all urls which need processing
         async for url in iterate_urls_to_recheck(pgpool):
             await worker_pool.add_url(url)
+            if time.monotonic() - run_start > run_target_duration:
+                break
 
         if options.single_run:
             await worker_pool.join()
             return
 
-        await asyncio.sleep(60)
+        run_duration = time.monotonic() - run_start
+        if run_duration < run_target_duration:
+            await asyncio.sleep(run_target_duration - run_duration)
 
-        print_statistics(status='finished')
+        print_statistics(finished=True)
 
 
 def parse_arguments() -> argparse.Namespace:
