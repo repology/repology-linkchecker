@@ -57,7 +57,7 @@ class PrecachedAsyncResolver(AbstractResolver):
             if addresses:
                 return SingleDnsStatus(addresses)
             return SingleDnsStatus([], aiodns.error.DNSError(1, 'DNS server returned answer with no data'))
-        except (KeyboardInterrupt, CancelledError):
+        except (KeyboardInterrupt, CancelledError, MemoryError):
             raise  # pragma: no cover
         except Exception as e:
             return SingleDnsStatus([], e)

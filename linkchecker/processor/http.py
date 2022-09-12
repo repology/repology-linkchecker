@@ -84,7 +84,7 @@ class HttpUrlProcessor(UrlProcessor):
 
             async with session.get(url, allow_redirects=True) as response:
                 return await self._process_response(url, response)
-        except (KeyboardInterrupt, CancelledError):
+        except (KeyboardInterrupt, CancelledError, MemoryError):
             raise  # pragma: no cover
         except Exception as e:
             return UrlStatus(False, classify_exception(e, url))
