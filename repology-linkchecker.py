@@ -72,7 +72,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     run_number = 0
     run_start = 0.0
 
-    run_target_duration = 120.0
+    run_target_duration = 60.0
 
     def print_statistics(*args: Any, finished: bool = False) -> None:
         stats = worker_pool.get_statistics()
