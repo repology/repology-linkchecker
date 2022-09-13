@@ -16,7 +16,7 @@
 # along with repology.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
-from typing import AsyncIterator, Optional
+from typing import AsyncIterator
 
 import aiopg
 
@@ -53,8 +53,8 @@ async def update_url_status(
     check_time: datetime.datetime,
     next_check_time: datetime.datetime,
     priority_next_check_time: datetime.datetime,
-    ipv4_status: Optional[UrlStatus],
-    ipv6_status: Optional[UrlStatus],
+    ipv4_status: UrlStatus | None,
+    ipv6_status: UrlStatus | None,
     check_duration: float | None
 ) -> None:
     async with pool.acquire() as conn:

@@ -17,7 +17,6 @@
 
 import datetime
 import random
-from typing import Optional
 
 import aiopg
 
@@ -34,7 +33,7 @@ class UrlUpdater:
         self._pgpool = pgpool
         self._host_manager = host_manager
 
-    async def update(self, url: str, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus], check_duration: float | None = None) -> None:
+    async def update(self, url: str, ipv4_status: UrlStatus | None, ipv6_status: UrlStatus | None, check_duration: float | None = None) -> None:
         (recheck_min, recheck_max), (priority_recheck_min, priority_recheck_max) = self._host_manager.get_rechecks(url)
         recheck_seconds = recheck_min + (recheck_max - recheck_min) * random.random()
         priority_recheck_seconds = priority_recheck_min + (priority_recheck_max - priority_recheck_min) * random.random()
