@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2021 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019-2022 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -18,6 +18,7 @@
 import asyncio
 import socket
 import ssl
+import time
 from concurrent.futures import CancelledError
 from typing import Iterable, Optional
 from urllib.parse import urljoin
@@ -101,6 +102,8 @@ class HttpUrlProcessor(UrlProcessor):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=timeout, headers=headers, connector=connector4) as session4:
             async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=timeout, headers=headers, connector=connector6) as session6:
                 for url in urls:
+                    start_ts = time.monotonic()
+
                     try:
                         host = yarl.URL(url).host
                     except Exception:
@@ -125,6 +128,6 @@ class HttpUrlProcessor(UrlProcessor):
                     else:
                         status6 = await self._check_url(url, session6)
 
-                    await self._url_updater.update(url, status4, status6)
+                    await self._url_updater.update(url, status4, status6, time.monotonic() - start_ts)
 
         await resolver.close()

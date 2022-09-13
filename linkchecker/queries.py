@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2021 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019-2022 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -54,7 +54,8 @@ async def update_url_status(
     next_check_time: datetime.datetime,
     priority_next_check_time: datetime.datetime,
     ipv4_status: Optional[UrlStatus],
-    ipv6_status: Optional[UrlStatus]
+    ipv6_status: Optional[UrlStatus],
+    check_duration: float | None
 ) -> None:
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
@@ -75,7 +76,9 @@ async def update_url_status(
                     ipv6_last_failure = CASE WHEN NOT %(ipv6_success)s THEN %(check_time)s ELSE ipv6_last_failure END,
                     ipv6_success = COALESCE(%(ipv6_success)s, ipv6_success),
                     ipv6_status_code = COALESCE(%(ipv6_status_code)s, ipv6_status_code),
-                    ipv6_permanent_redirect_target = COALESCE(%(ipv6_permanent_redirect_target)s, ipv6_permanent_redirect_target)
+                    ipv6_permanent_redirect_target = COALESCE(%(ipv6_permanent_redirect_target)s, ipv6_permanent_redirect_target),
+
+                    check_duration = %(check_duration)s
                 WHERE url = %(url)s
                 """,
                 {
@@ -91,6 +94,8 @@ async def update_url_status(
                     'ipv6_success': ipv6_status.success if ipv6_status is not None else None,
                     'ipv6_status_code': ipv6_status.status_code if ipv6_status is not None else None,
                     'ipv6_permanent_redirect_target': ipv6_status.permanent_redirect_target if ipv6_status is not None else None,
+
+                    'check_duration': check_duration,
                 }
             )
 

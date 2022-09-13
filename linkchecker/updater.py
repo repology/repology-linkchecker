@@ -1,4 +1,4 @@
-# Copyright (C) 2019,2021 Dmitry Marakasov <amdmi3@amdmi3.ru>
+# Copyright (C) 2019,2021-2022 Dmitry Marakasov <amdmi3@amdmi3.ru>
 #
 # This file is part of repology
 #
@@ -34,7 +34,7 @@ class UrlUpdater:
         self._pgpool = pgpool
         self._host_manager = host_manager
 
-    async def update(self, url: str, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus]) -> None:
+    async def update(self, url: str, ipv4_status: Optional[UrlStatus], ipv6_status: Optional[UrlStatus], check_duration: float | None = None) -> None:
         (recheck_min, recheck_max), (priority_recheck_min, priority_recheck_max) = self._host_manager.get_rechecks(url)
         recheck_seconds = recheck_min + (recheck_max - recheck_min) * random.random()
         priority_recheck_seconds = priority_recheck_min + (priority_recheck_max - priority_recheck_min) * random.random()
@@ -42,5 +42,5 @@ class UrlUpdater:
         check_time = datetime.datetime.now()
         next_check_time = check_time + datetime.timedelta(seconds=recheck_seconds)
         priority_next_check_time = check_time + datetime.timedelta(seconds=priority_recheck_seconds)
-        await update_url_status(self._pgpool, url, check_time, next_check_time, priority_next_check_time, ipv4_status, ipv6_status)
+        await update_url_status(self._pgpool, url, check_time, next_check_time, priority_next_check_time, ipv4_status, ipv6_status, check_duration)
         await update_statistics(self._pgpool, 1)
