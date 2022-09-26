@@ -19,6 +19,7 @@ import asyncio
 import socket
 import ssl
 import time
+from collections import defaultdict
 from concurrent.futures import CancelledError
 from typing import Iterable, Optional
 from urllib.parse import urljoin
@@ -99,35 +100,44 @@ class HttpUrlProcessor(UrlProcessor):
         timeout = aiohttp.ClientTimeout(total=self._timeout)
         headers = {'User-Agent': USER_AGENT}
 
+        # optimization for a lot of urls differing only by fragment, such as
+        # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/haskell-modules/hackage-packages.nix#L*
+        url_fragments = defaultdict(list)  # real url per fragmentless url
+
+        for url in urls:
+            url_fragments[url.split('#', 1)[0]].append(url)
+
         async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=timeout, headers=headers, connector=connector4) as session4:
             async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar(), timeout=timeout, headers=headers, connector=connector6) as session6:
-                for url in urls:
+                for fragmentless_url, fragment_urls in url_fragments.items():
                     start_ts = time.monotonic()
 
                     try:
-                        host = yarl.URL(url).host
+                        host = yarl.URL(fragmentless_url).host
                     except Exception:
                         host = None
 
                     if host is None:
                         errstatus = UrlStatus(False, ExtendedStatusCodes.INVALID_URL)
-                        await self._url_updater.update(url, errstatus, errstatus)
+                        await self._url_updater.update(fragmentless_url, errstatus, errstatus)
                         continue
 
                     dns = await resolver.get_host_status(host)
 
                     if dns.ipv4.exception is not None:
-                        status4 = UrlStatus(False, classify_exception(dns.ipv4.exception, url))
+                        status4 = UrlStatus(False, classify_exception(dns.ipv4.exception, fragmentless_url))
                     else:
-                        status4 = await self._check_url(url, session4)
+                        status4 = await self._check_url(fragmentless_url, session4)
 
                     if self._skip_ipv6:
                         status6 = None
                     elif dns.ipv6.exception is not None:
-                        status6 = UrlStatus(False, classify_exception(dns.ipv6.exception, url))
+                        status6 = UrlStatus(False, classify_exception(dns.ipv6.exception, fragmentless_url))
                     else:
-                        status6 = await self._check_url(url, session6)
+                        status6 = await self._check_url(fragmentless_url, session6)
 
-                    await self._url_updater.update(url, status4, status6, time.monotonic() - start_ts)
+                    check_duration = time.monotonic() - start_ts
+                    for fragment_url in fragment_urls:
+                        await self._url_updater.update(fragment_url, status4, status6, check_duration)
 
         await resolver.close()
