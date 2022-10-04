@@ -138,7 +138,7 @@ def parse_arguments() -> argparse.Namespace:
 async def main() -> None:
     options = parse_arguments()
 
-    async with aiopg.create_pool(options.dsn, minsize=2, maxsize=max(2, options.max_db_connections), timeout=60) as pgpool:
+    async with aiopg.create_pool(options.dsn, minsize=2, maxsize=max(2, options.max_db_connections), timeout=600) as pgpool:
         await main_loop(options, pgpool)
 
 
