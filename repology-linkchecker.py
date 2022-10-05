@@ -94,6 +94,9 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     while True:
         run_number += 1
         run_start = time.monotonic()
+
+        print(f'Run #{run_number} started', file=sys.stderr)
+
         worker_pool.reset_statistics()
 
         # process all urls which need processing
