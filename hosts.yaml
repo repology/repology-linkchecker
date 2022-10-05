@@ -6,19 +6,23 @@ defaults:
 hosts:
   # for module hosting facilities (rubygems, pypi, cpan) we set larger recheck time
   # since there are a lot of links, but the links are unlikely to change status
+  aur.archlinux.org: { delay: 60, recheck: 45d-70d } # sensitive to load
   buildd.debian.org: { delay: 60, recheck: 300d-360d } # sensitive to load
+  build.opensuse.org: { recheck: 21d-28d }
   cpan.metacpan.org: { priority_recheck: 14d-21d }
   crates.io: { skip: true } # misconfigured crap, always 404; XXX: this is true only for crate pages, not for e.g. https://crates.io/api/v1/crates/abscissa_core/0.5.2/download
   dev.exherbo.org: { delay: 1 }
   dev.gentoo.org: { delay: 1 }
   files.pythonhosted.org: { delay: 1, priority_recheck: 14d-21d }
-  github.com: { delay: 1, priority_recheck: 14d-21d, recheck: 30d-45d }
+  github.com: { delay: 1, priority_recheck: 21d-28d, recheck: 45d-70d }
   github.io: { delay: 1, aggregate: true }
   gitlab.com: { delay: 1 }
   notabug.org: { delay: 60 }
   npmjs.com: { delay: 10 }
   npmjs.org: { delay: 10 }
+  pkgs.alpinelinux.org: { recheck: 45d-70d }
   pypi.org: { delay: 1, priority_recheck: 14d-21d }
+  raw.githubusercontent.com: { delay: 1 }
   rubygems.org: { delay: 1, priority_recheck: 14d-21d }
   search.cpan.org: { priority_recheck: 14d-21d }
   sf.net: { aggregate: true }
