@@ -39,8 +39,21 @@ async def iterate_urls_to_recheck(pool: aiopg.Pool) -> AsyncIterator[str]:
                     url
                 FROM all_urls
                 WHERE num_for_host <= 100
-                LIMIT 10000
+                LIMIT 20000
                 """
+                # XXX: Important tuning point
+                # The LIMIT may be tuned for optimum performance. When linkchecker is under
+                # heavy load (e.g. there are urls to check from thousands of distincive hosts),
+                # keep an eye on "url(s) scanned" statistic, and set the LIMIT somewhat (1.2-2x)
+                # higher than it. The sign of correct setting is that all workers are running at
+                # the end of iteration ("100 worker(s) running" with default settings).
+                #
+                # The idea here is to return enough urls that can be processed in a single 1
+                # minute linkchecker iteration to keep all workers fully loaded.
+                #
+                # Setting it lower would hinder link checking performance, and setting it higher
+                # would waste more memory. It's not too much though (~20MB for 100k urls), so
+                # better set it higher.
             )
 
             async for row in cur:
