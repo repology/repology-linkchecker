@@ -6,7 +6,7 @@ defaults:
 hosts:
   # for module hosting facilities (rubygems, pypi, cpan) we set larger recheck time
   # since there are a lot of links, but the links are unlikely to change status
-  aur.archlinux.org: { delay: 60, recheck: 45d-70d } # sensitive to load
+  aur.archlinux.org: { recheck: 45d-70d }
   buildd.debian.org: { delay: 60, recheck: 300d-360d } # sensitive to load
   build.opensuse.org: { recheck: 21d-28d }
   cpan.metacpan.org: { priority_recheck: 14d-21d }
