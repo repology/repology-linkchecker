@@ -13,7 +13,7 @@ hosts:
   crates.io: { skip: true } # misconfigured crap, always 404; XXX: this is true only for crate pages, not for e.g. https://crates.io/api/v1/crates/abscissa_core/0.5.2/download
   dev.exherbo.org: { delay: 1 }
   dev.gentoo.org: { delay: 1 }
-  files.pythonhosted.org: { delay: 1, priority_recheck: 14d-21d }
+  files.pythonhosted.org: { delay: 1, recheck: 30d-45d, priority_recheck: 30d-45d }
   github.com: { delay: 1, priority_recheck: 21d-28d, recheck: 45d-70d }
   github.io: { delay: 1, aggregate: true }
   gitlab.com: { delay: 1 }
