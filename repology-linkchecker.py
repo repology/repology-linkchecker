@@ -52,7 +52,7 @@ async def main_loop(options: argparse.Namespace, pgpool: aiopg.Pool) -> None:
     updater = UrlUpdater(pgpool, host_manager)
 
     dummy_processor = DummyUrlProcessor(updater)
-    http_processor = HttpUrlProcessor(updater, host_manager, options.timeout, options.skip_ipv6, options.strict_ssl)
+    http_processor = HttpUrlProcessor(updater, host_manager, options.timeout, options.skip_ipv6, options.strict_ssl, options.satisfy_with_ipv6)
     blacklisted_processor = BlacklistedUrlProcessor(updater, host_manager)
 
     dispatcher = DispatchingUrlProcessor(
@@ -133,6 +133,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser.add_argument('--single-run', action='store_true', help='exit after single run')
     parser.add_argument('--skip-ipv6', action='store_true', help='skip IPv6 checks')
+    parser.add_argument('--satisfy-with-ipv6', action='store_true', help='skip IPv4 checks if IPv6 check passes')
     parser.add_argument('--strict-ssl', action='store_true', help='stricter SSL requirements (require TLS1.2 support)')
 
     return parser.parse_args()

@@ -47,13 +47,15 @@ class HttpUrlProcessor(UrlProcessor):
     _host_manager: HostManager
     _timeout: float
     _skip_ipv6: bool
+    _satisfy_with_ipv6: bool
     _ssl_context: Optional[ssl.SSLContext]
 
-    def __init__(self, url_updater: UrlUpdater, host_manager: HostManager, timeout: float, skip_ipv6: bool = True, strict_ssl: bool = False) -> None:
+    def __init__(self, url_updater: UrlUpdater, host_manager: HostManager, timeout: float, skip_ipv6: bool = True, strict_ssl: bool = False, satisfy_with_ipv6: bool = False) -> None:
         self._url_updater = url_updater
         self._host_manager = host_manager
         self._timeout = timeout
         self._skip_ipv6 = skip_ipv6
+        self._satisfy_with_ipv6 = satisfy_with_ipv6
         self._ssl_context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLSv1_2) if strict_ssl else None
 
     def taste(self, url: str) -> bool:
@@ -116,17 +118,19 @@ class HttpUrlProcessor(UrlProcessor):
 
                     dns = await resolver.get_host_status(host)
 
-                    if dns.ipv4.exception is not None:
-                        status4 = UrlStatus(False, classify_exception(dns.ipv4.exception, url))
-                    else:
-                        status4 = await self._check_url(url, session4)
-
                     if self._skip_ipv6:
                         status6 = None
                     elif dns.ipv6.exception is not None:
                         status6 = UrlStatus(False, classify_exception(dns.ipv6.exception, url))
                     else:
                         status6 = await self._check_url(url, session6)
+
+                    if dns.ipv4.exception is not None:
+                        status4 = UrlStatus(False, classify_exception(dns.ipv4.exception, url))
+                    elif self._satisfy_with_ipv6 and status6 and status6.success:
+                        status4 = None
+                    else:
+                        status4 = await self._check_url(url, session4)
 
                     await self._url_updater.update(url, status4, status6, time.monotonic() - start_ts)
 
