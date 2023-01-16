@@ -17,6 +17,7 @@ hosts:
   github.com: { delay: 1, priority_recheck: 21d-28d, recheck: 45d-70d }
   github.io: { delay: 1, aggregate: true }
   gitlab.com: { delay: 1 }
+  mran.revolutionanalytics.com: { priority_recheck: 14d-21d }
   notabug.org: { delay: 60 }
   npmjs.com: { delay: 10 }
   npmjs.org: { delay: 10 }
