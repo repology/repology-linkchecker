@@ -30,7 +30,6 @@ hosts:
   sourceforge.net: { aggregate: true }
   src.fedoraproject.org: { recheck: 90d-120d } # very big
   sting.dragonflybsd.org: { recheck: 21d-28d } # ipv6 always times out; XXX: need a way to disable IPv6 or lower the timeout for it, see #31 #32
-  svnweb.freebsd.org: { skip: true } # misconfigured crap, always 403
 
   #
   # blacklist
