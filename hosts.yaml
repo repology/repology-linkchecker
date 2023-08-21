@@ -1,36 +1,37 @@
 defaults:
   delay: 3
-  priority_recheck: 6d-8d
-  recheck: 14d-21d
+  priority_recheck: 6d-12d
+  recheck: 14d-28d
 
 hosts:
   # for module hosting facilities (rubygems, pypi, cpan) we set larger recheck time
   # since there are a lot of links, but the links are unlikely to change status
-  aur.archlinux.org: { recheck: 45d-70d }
-  buildd.debian.org: { delay: 60, recheck: 300d-360d } # sensitive to load
-  build.opensuse.org: { recheck: 21d-28d }
-  cpan.metacpan.org: { priority_recheck: 14d-21d }
+  abf.io: { recheck: 21d-42d }
+  aur.archlinux.org: { recheck: 45d-90d }
+  buildd.debian.org: { delay: 60, recheck: 400d-600d } # sensitive to load
+  build.opensuse.org: { recheck: 21d-42d }
+  cpan.metacpan.org: { priority_recheck: 14d-28d }
   crates.io: { skip: true } # misconfigured crap, always 404; XXX: this is true only for crate pages, not for e.g. https://crates.io/api/v1/crates/abscissa_core/0.5.2/download
-  dev.exherbo.org: { delay: 1, priority_recheck: 30d-45d } # broken (ipv6?), 60+ sec checks
+  dev.exherbo.org: { delay: 1, priority_recheck: 30d-60d } # broken (ipv6?), 60+ sec checks
   dev.gentoo.org: { delay: 1 }
-  files.pythonhosted.org: { delay: 1, recheck: 30d-45d, priority_recheck: 30d-45d }
-  github.com: { delay: 1, priority_recheck: 21d-28d, recheck: 45d-70d }
+  files.pythonhosted.org: { delay: 1, recheck: 30d-60d, priority_recheck: 30d-60d }
+  github.com: { delay: 1, priority_recheck: 21d-42d, recheck: 45d-90d }
   github.io: { delay: 1, aggregate: true }
   gitlab.com: { delay: 1 }
-  kojipkgs.fedoraproject.org: { recheck: 45d-70d }
-  mran.revolutionanalytics.com: { priority_recheck: 14d-21d }
+  kojipkgs.fedoraproject.org: { recheck: 45d-90d }
+  mran.revolutionanalytics.com: { priority_recheck: 14d-28d }
   notabug.org: { delay: 60 }
   npmjs.com: { delay: 10 }
   npmjs.org: { delay: 10 }
-  pkgs.alpinelinux.org: { recheck: 45d-70d }
-  pypi.org: { delay: 1, priority_recheck: 14d-21d }
+  pkgs.alpinelinux.org: { recheck: 45d-90d }
+  pypi.org: { delay: 1, priority_recheck: 14d-28d }
   raw.githubusercontent.com: { delay: 1 }
-  rubygems.org: { delay: 1, priority_recheck: 14d-21d }
-  search.cpan.org: { priority_recheck: 14d-21d }
+  rubygems.org: { delay: 1, priority_recheck: 14d-28d }
+  search.cpan.org: { priority_recheck: 14d-28d }
   sf.net: { aggregate: true }
   sourceforge.net: { aggregate: true }
-  src.fedoraproject.org: { recheck: 90d-120d } # very big
-  sting.dragonflybsd.org: { recheck: 21d-28d } # ipv6 always times out; XXX: need a way to disable IPv6 or lower the timeout for it, see #31 #32
+  src.fedoraproject.org: { recheck: 90d-180d } # very big
+  sting.dragonflybsd.org: { recheck: 21d-42d } # ipv6 always times out; XXX: need a way to disable IPv6 or lower the timeout for it, see #31 #32
 
   #
   # blacklist
