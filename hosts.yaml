@@ -18,6 +18,7 @@ hosts:
   github.com: { delay: 1, priority_recheck: 21d-42d, recheck: 45d-90d }
   github.io: { delay: 1, aggregate: true }
   gitlab.com: { delay: 1 }
+  hydra.nixos.org: { skip: true } # nix build logs, no need to check
   kojipkgs.fedoraproject.org: { recheck: 45d-90d }
   mran.revolutionanalytics.com: { priority_recheck: 14d-28d }
   notabug.org: { delay: 60 }
