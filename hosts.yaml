@@ -85,3 +85,4 @@ hosts:
   topfx.com: { blacklist: true }
   wmii.de: { blacklist: true }
   yafray.org: { blacklist: true }
+  beryl-project.org: { blacklist: true }
